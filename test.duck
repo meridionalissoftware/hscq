@@ -3,6 +3,6 @@
 # -ffast-math, which can perturb the stream-defining trig
 # Comptime stress (raised constexpr limits): scripts/ctbuild
 # prefer building freestanding for the github release in case people don't have glibc or other install shenanigans
-test tests/ -O3 -i include/micron/tests -i include/micron -i include/micron/src -i /usr/include -ke --start include/micron/start
+test tests/ --std c++23 -O3 -i include/micron/tests -i include/micron -i include/micron/src -i /usr/include -ke --start include/micron/start
 # Sanitizer
 # debug tests/fuzz_unhopf.cpp --asan --ubsan -O3 -i include/micron/tests -i include/micron -i include/micron/src -i /usr/include

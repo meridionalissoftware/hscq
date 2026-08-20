@@ -2,13 +2,13 @@
 # --perf --fp, never -Ofast: the codec path is floating point
 # NOTE: this inherits duck's -fstack-protector-all and -flto=8
 # prefer building freestanding for the github release in case people don't have glibc or other install shenanigans
-build benches/hopf_bench.cpp --perf --fp -i include/micron -i include/micron/src -i /usr/include -ke --start include/micron/start
-build benches/unhopf_bench.cpp --perf --fp -i include/micron -i include/micron/src -i /usr/include -ke --start include/micron/start
-build benches/quantize_bench.cpp --perf --fp -i include/micron -i include/micron/src -i /usr/include -ke --start include/micron/start
-build benches/skeleton_bench.cpp --perf --fp -i include/micron -i include/micron/src -i /usr/include -ke --start include/micron/start
-build benches/rd_bench.cpp --perf --fp -i include/micron -i include/micron/src -i /usr/include -ke --start include/micron/start
-build benches/latency_bench.cpp --perf --fp -i include/micron -i include/micron/src -i /usr/include -ke --start include/micron/start
-build benches/throughput_bench.cpp --perf --fp -i include/micron -i include/micron/src -i /usr/include -ke --start include/micron/start
-build benches/kernel_bench.cpp --perf --fp -i include/micron -i include/micron/src -i /usr/include -ke --start include/micron/start
-build benches/compression_ratio_bench.cpp --perf --fp -i include/micron -i include/micron/src -i /usr/include -ke --start include/micron/start
-build benches/vector_bench.cpp --perf --fp -i include/micron -i include/micron/src -i /usr/include -ke --start include/micron/start
+build benches/hopf_bench.cpp  --std c++23  --perf --fp -i include/micron -i include/micron/src -i /usr/include -ke --start include/micron/start
+build benches/unhopf_bench.cpp  --std c++23 --perf --fp -i include/micron -i include/micron/src -i /usr/include -ke --start include/micron/start
+build benches/quantize_bench.cpp  --std c++23 --perf --fp -i include/micron -i include/micron/src -i /usr/include -ke --start include/micron/start
+build benches/skeleton_bench.cpp  --std c++23 --perf --fp -i include/micron -i include/micron/src -i /usr/include -ke --start include/micron/start
+build benches/rd_bench.cpp  --std c++23 --perf --fp -i include/micron -i include/micron/src -i /usr/include -ke --start include/micron/start
+build benches/latency_bench.cpp  --std c++23 --perf --fp -i include/micron -i include/micron/src -i /usr/include -ke --start include/micron/start
+build benches/throughput_bench.cpp  --std c++23 --perf --fp -i include/micron -i include/micron/src -i /usr/include -ke --start include/micron/start
+build benches/kernel_bench.cpp  --std c++23 --perf --fp -i include/micron -i include/micron/src -i /usr/include -ke --start include/micron/start
+build benches/compression_ratio_bench.cpp  --std c++23 --perf --fp -i include/micron -i include/micron/src -i /usr/include -ke --start include/micron/start
+build benches/vector_bench.cpp  --std c++23 --perf --fp -i include/micron -i include/micron/src -i /usr/include -ke --start include/micron/start

@@ -2,7 +2,7 @@
 
 #### Hopf Spherical Compression (& Quantization)
 
-... is a header-only C++26 fixed-rate lossy compression library built on the [micron](https://github.com/rfgplk/micron.cpp) corelib, inspired in part via *Constructive Spherical Codes by Hopf Foliations* (SCHF; Miyamoto, Costa, Sá Earp, IEEE Trans. Inf. Theory 2021).
+... is a header-only C++23 fixed-rate lossy compression library built on the [micron](https://github.com/rfgplk/micron.cpp) corelib, inspired in part via *Constructive Spherical Codes by Hopf Foliations* (SCHF; Miyamoto, Costa, Sá Earp, IEEE Trans. Inf. Theory 2021).
 
 The sphere S^(2n−1) foliates into leaves (S^(n−1) × S^(n−1))_η, recursively down to S³, which
 foliates into flat tori carrying points on internal circles. A data block becomes Hopf
