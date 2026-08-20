@@ -1,8 +1,8 @@
-// Decoder fuzz: deterministic corpus of valid streams under single-bit flips at every byte,
-// truncations, random garbage, and magic-prefixed garbage. The contract is NO crash and NO
-// UB (run this under duck debug --asan --ubsan as the sanitizer gate) -- every input returns
-// cleanly. A flip is allowed to decode successfully in the rare cases the 8-bit header check
-// collides AND every field still validates; what it may never do is walk out of bounds.
+//  Decoder fuzz: deterministic corpus of valid streams under single-bit flips at every byte,
+//  truncations, random garbage, and magic-prefixed garbage. The contract is NO crash and NO
+//  UB (run this under duck debug --asan --ubsan as the sanitizer gate) -- every input returns
+//  cleanly. A flip is allowed to decode successfully in the rare cases the 8-bit header check
+//  collides AND every field still validates; what it may never do is walk out of bounds.
 
 #include "../src/hsc/hsc.hpp"
 #include "tutil.hpp"
@@ -15,7 +15,7 @@
 namespace
 {
 
-// exercise every decode surface on one candidate buffer
+//  exercise every decode surface on one candidate buffer
 void
 poke(hsc::hopf_scratch &sc, const u8 *p, usize n)
 {
@@ -28,9 +28,9 @@ poke(hsc::hopf_scratch &sc, const u8 *p, usize n)
   static f32 fout[1 << 12];
   (void)hsc::unhopf(hsc::bytes{ p, n }, hsc::wfloats{ fout, sizeof(fout) / sizeof(f32) });
 
-  // the range surface parses the same attacker-controlled header and then SEEKS on the block
-  // count and record width it read out of it, so it needs the same treatment. Windows are taken
-  // from the header's own nblocks (in range and past the end) and from wild values.
+  //  the range surface parses the same attacker-controlled header and then SEEKS on the block
+  //  count and record width it read out of it, so it needs the same treatment. Windows are taken
+  //  from the header's own nblocks (in range and past the end) and from wild values.
   const u64 wild[] = { 0ull, 1ull, 7ull, 0xFFFFFFFFull, 0xFFFFFFFFFFFFFFFFull };
   for ( u64 f : wild )
     for ( u64 c : wild ) {
@@ -46,12 +46,12 @@ poke(hsc::hopf_scratch &sc, const u8 *p, usize n)
         (void)hsc::unhopf_range(hsc::bytes{ p, n }, f, c, hsc::wbytes{ out, sizeof(out) }, sc);
         (void)hsc::unhopf_range(hsc::bytes{ p, n }, f, c, hsc::wfloats{ fout, sizeof(fout) / sizeof(f32) }, sc);
       }
-    // a deliberately undersized sink: short_output, never a write past the end
+    //  a deliberately undersized sink: short_output, never a write past the end
     (void)hsc::unhopf_range(hsc::bytes{ p, n }, 0, nb, hsc::wbytes{ out, 1 }, sc);
   }
 }
 
-}      // namespace
+}      //  namespace
 
 int
 main()
@@ -59,8 +59,8 @@ main()
   hsc::hopf_scratch sc;
   tutil::rng g;
 
-  // seed streams: one per mode, mixed dims/levels, including empty and tiny payloads, plus
-  // transformed (flags bit2) variants of every transformable mode
+  //  seed streams: one per mode, mixed dims/levels, including empty and tiny payloads, plus
+  //  transformed (flags bit2) variants of every transformable mode
   micron::vector<micron::vector<u8>> seeds;
   seeds.reserve(8);
   {
@@ -92,7 +92,7 @@ main()
     auto q8 = hsc::hopf(hsc::as_floats(fl), hsc::hopf_opts{ .m = hsc::mode::oct, .level = 6 }, sc);
     sb::require(q8.is_first());
     push(micron::move(q8.cast<hsc::fhsc>()));
-    // transformed seeds, one per transformable mode: flips explore bit2-adjacent state
+    //  transformed seeds, one per transformable mode: flips explore bit2-adjacent state
     push(hsc::hopf(tutil::view(raw), hsc::hopf_opts{ .level = 6, .dim_log2 = 3, .transform = true }, sc));
     auto vt = hsc::hopf(hsc::as_floats(fl), hsc::hopf_opts{ .m = hsc::mode::vec, .level = 6, .dim_log2 = 4, .transform = true }, sc);
     sb::require(vt.is_first());
@@ -130,13 +130,13 @@ main()
       const usize n = 1 + static_cast<usize>(g.below(sizeof(buf)));
       for ( usize i = 0; i < n; ++i ) buf[i] = static_cast<u8>(g.next());
       poke(sc, buf, n);
-      // now force the magic + a plausible version so parsing goes deeper
+      //  now force the magic + a plausible version so parsing goes deeper
       if ( n >= 6 ) {
         hsc::__store32(buf, hsc::k_magic);
         buf[4] = 1;
-        buf[5] = static_cast<u8>(g.below(8));      // reach the transform bit too
+        buf[5] = static_cast<u8>(g.below(8));      //  reach the transform bit too
         poke(sc, buf, n);
-        // and a correct hc byte so field validation itself gets fuzzed
+        //  and a correct hc byte so field validation itself gets fuzzed
         if ( n >= 48 ) {
           buf[39] = static_cast<u8>(hsc::xxh32(hsc::bytes{ buf, 39 }) >> 8);
           poke(sc, buf, n);

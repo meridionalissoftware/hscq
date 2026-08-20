@@ -10,23 +10,23 @@
 
 #include <micron/types.hpp>
 
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// ENERGY BALANCING PREROTATION
-// y = (1/sqrt n) H Dx  (header flags bit2)
+//  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//  ENERGY BALANCING PREROTATION
+//  y = (1/sqrt n) H Dx  (header flags bit2)
 //
-// H is the n * n Walsh-Hadamard matrix (butterfly, adds/subs only, H symmetric, H^2 = nI);
-// D is a pinned +-1 diagonal; (1/sqrt n) H is orthogonal AND involutive, so the inverse is D then the same butterfly;
-// rows of (1/sqrt n) H D have entries of equal magnitude 1/sqrt(n) (H and D themselves are +-1),
-// so every basis vector maps to an exact 50/50 half energy split at every recursion level
+//  H is the n * n Walsh-Hadamard matrix (butterfly, adds/subs only, H symmetric, H^2 = nI);
+//  D is a pinned +-1 diagonal; (1/sqrt n) H is orthogonal AND involutive, so the inverse is D then the same butterfly;
+//  rows of (1/sqrt n) H D have entries of equal magnitude 1/sqrt(n) (H and D themselves are +-1),
+//  so every basis vector maps to an exact 50/50 half energy split at every recursion level
 
 namespace hsc
 {
 
-// bit c set = negate coordinate c before the butterfly;
-// a block of dim n uses the low n bits (prefix property: dim-4 blocks always see bits 0..3)
+//  bit c set = negate coordinate c before the butterfly;
+//  a block of dim n uses the low n bits (prefix property: dim-4 blocks always see bits 0..3)
 inline constexpr u64 k_dsign_mask = 0xDC1B77AE0BF34DADull;
 
-// 1/sqrt(2^k) by dim_log2
+//  1/sqrt(2^k) by dim_log2
 inline constexpr f64 k_rot_scale[7] = {
   1.0,
   1.0 / __sqrt(f64(2.0)),
@@ -37,7 +37,7 @@ inline constexpr f64 k_rot_scale[7] = {
   1.0 / __sqrt(f64(64.0)),
 };
 
-// in-place Walsh-Hadamard butterfly, adds/subs only (no fma)
+//  in-place Walsh-Hadamard butterfly, adds/subs only (no fma)
 constexpr void
 __wht(f64 *v, u32 n) noexcept
 {
@@ -53,7 +53,7 @@ __wht(f64 *v, u32 n) noexcept
   }
 }
 
-// encode side, before quantize: signs, butterfly, scale
+//  encode side, before quantize: signs, butterfly, scale
 constexpr void
 rot_fwd(f64 *v, u32 dim_log2) noexcept
 {
@@ -65,7 +65,7 @@ rot_fwd(f64 *v, u32 dim_log2) noexcept
   for ( u32 c = 0; c < n; ++c ) v[c] *= s;
 }
 
-// decode side, after reconstruct: butterfly, then scale and signs in one pass
+//  decode side, after reconstruct: butterfly, then scale and signs in one pass
 constexpr void
 rot_inv(f64 *v, u32 dim_log2) noexcept
 {
@@ -75,4 +75,4 @@ rot_inv(f64 *v, u32 dim_log2) noexcept
   for ( u32 c = 0; c < n; ++c ) v[c] *= ((k_dsign_mask >> c) & 1u) ? -s : s;
 }
 
-};      // namespace hsc
+};      //  namespace hsc

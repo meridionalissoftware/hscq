@@ -13,10 +13,10 @@
 
 #include <micron/types.hpp>
 
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// hsc container
+//  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//  hsc container
 //
-// offset  width  field
+//  offset  width  field
 //   0       4   magic 0x43534889 ("\x89HSC" on disk)
 //   4       1   version = 1
 //   5       1   flags
@@ -60,7 +60,7 @@ struct hopf_info {
   u64 n_elems = 0;
   u64 nblocks = 0;
   u64 skel_guard = 0;
-  bool transform = false;      // flags bit2: H*D pre-rotation applied per block
+  bool transform = false;      //  flags bit2: H*D pre-rotation applied per block
 };
 
 constexpr bool
@@ -69,7 +69,7 @@ __has_gain(mode m) noexcept
   return m == mode::bin || m == mode::vec;
 }
 
-// fibration sets dim_log2 and forbids the pre-rotation; 0 = not in the family
+//  fibration sets dim_log2 and forbids the pre-rotation; 0 = not in the family
 constexpr u32
 __fiber_dim_log2(mode m) noexcept
 {
@@ -114,7 +114,7 @@ write_header(u8 *h, const hopf_info &fi) noexcept
   h[7] = static_cast<u8>(fi.dim_log2);
   __store32(h + 8, fi.d_q);
   h[12] = static_cast<u8>(fi.gain_bits);
-  h[13] = 0;      // profile: standard
+  h[13] = 0;      //  profile: standard
   __store16(h + 14, fi.bits_per_block);
   __store64(h + 16, fi.n_elems);
   __store64(h + 24, fi.skel_guard);
@@ -139,7 +139,7 @@ read_header(bytes in, hopf_info &fi) noexcept
   if ( flags & 0xF8u ) [[unlikely]]
     return fail(error::bad_container);
   if ( !(flags & 0x01u) ) [[unlikely]]
-    return fail(error::unsupported);      // per-node wire profile reserved, not implemented
+    return fail(error::unsupported);      //  per-node wire profile reserved, not implemented
   if ( h[6] > 5 ) [[unlikely]]
     return fail(error::bad_container);
   fi.m = static_cast<mode>(h[6]);
@@ -159,7 +159,7 @@ read_header(bytes in, hopf_info &fi) noexcept
   if ( __has_gain(fi.m) ? (fi.gain_bits < 1 || fi.gain_bits > 24) : (fi.gain_bits != 0) ) [[unlikely]]
     return fail(error::bad_container);
   if ( h[13] != 0 ) [[unlikely]]
-    return fail(error::unsupported);      // construction profile
+    return fail(error::unsupported);      //  construction profile
   fi.bits_per_block = __load16(h + 14);
   fi.n_elems = __load64(h + 16);
   fi.skel_guard = __load64(h + 24);
@@ -167,7 +167,7 @@ read_header(bytes in, hopf_info &fi) noexcept
   if ( h[36] || h[37] || h[38] ) [[unlikely]]
     return fail(error::bad_container);
   if ( fi.m == mode::vec ) {
-    const u32 exp = (fi.gscale_bits >> 23) & 0xFFu;      // finite, non-negative f32 required
+    const u32 exp = (fi.gscale_bits >> 23) & 0xFFu;      //  finite, non-negative f32 required
     if ( (fi.gscale_bits & 0x80000000u) || exp == 0xFFu ) [[unlikely]]
       return fail(error::bad_container);
   } else if ( fi.gscale_bits != 0 ) [[unlikely]]
@@ -207,7 +207,7 @@ check_trailer(bytes in, const hopf_info &fi) noexcept
   return 0;
 }
 
-};      // namespace __format
+};      //  namespace __format
 
 constexpr result<hopf_info>
 hopf_probe(bytes in) noexcept
@@ -219,4 +219,4 @@ hopf_probe(bytes in) noexcept
   return fi;
 }
 
-};      // namespace hsc
+};      //  namespace hsc

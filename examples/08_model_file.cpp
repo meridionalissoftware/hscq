@@ -1,15 +1,15 @@
-// 08_model_file.cpp
-// See also:
-//   examples/04_embeddings.cpp  — the container and row access, on synthetic data
-//   benches/vector_bench.cpp    — the same measurement across a grid of cells
-//   scripts/vector_eval.py      — cosine and recall@k in numpy, off the --in/--out filter
+//  08_model_file.cpp
+//  See also:
+//    examples/04_embeddings.cpp  — the container and row access, on synthetic data
+//    benches/vector_bench.cpp    — the same measurement across a grid of cells
+//    scripts/vector_eval.py      — cosine and recall@k in numpy, off the --in/--out filter
 //
-// The corpus is NOT in the repo. Build it first:
-//   python3 scripts/corpus.py fetch && python3 scripts/corpus.py models
-// Without it this prints `skip` and exits clean, exactly as the benches do.
+//  The corpus is NOT in the repo. Build it first:
+//    python3 scripts/corpus.py fetch && python3 scripts/corpus.py models
+//  Without it this prints `skip` and exits clean, exactly as the benches do.
 //
-// Build (from the repo root):
-//   duck batch examples.duck && ./bin/08_model_file
+//  Build (from the repo root):
+//    duck batch examples.duck && ./bin/08_model_file
 
 #include "_ex_common.hpp"
 
@@ -18,8 +18,8 @@
 namespace
 {
 
-// a prefix is plenty to measure with, and keeps the example honest about memory
-constexpr usize k_cap = 24u << 20;      // 6 Mi floats
+//  a prefix is plenty to measure with, and keeps the example honest about memory
+constexpr usize k_cap = 24u << 20;      //  6 Mi floats
 alignas(64) u8 g_in[k_cap];
 
 struct tf {
@@ -34,10 +34,10 @@ constexpr tf k_files[] = {
   { "SmolLM2 mlp", "corpus/models/SmolLM2-135M.model_layers_0_mlp_down_proj_weight.f32", 1536 },
 };
 
-// symmetric int-N, per row: the standard baseline. One f16 scale per row, N-bit signed codes.
-// This example bills the scale honestly: bits/weight = N + 16/cols. NOTE the published scorers
-// (scripts/vector_eval.py, scripts/preset_chart.py) follow the usual convention and charge
-// exactly N, excluding the per-row scale (16/cols ~= 0.04 b/w at 384 cols) -- their captions say so.
+//  symmetric int-N, per row: the standard baseline. One f16 scale per row, N-bit signed codes.
+//  This example bills the scale honestly: bits/weight = N + 16/cols. NOTE the published scorers
+//  (scripts/vector_eval.py, scripts/preset_chart.py) follow the usual convention and charge
+//  exactly N, excluding the per-row scale (16/cols ~= 0.04 b/w at 384 cols) -- their captions say so.
 f64
 intn_rel_rmse(const f32 *v, usize rows, usize cols, u32 nbits)
 {
@@ -50,7 +50,7 @@ intn_rel_rmse(const f32 *v, usize rows, usize cols, u32 nbits)
       const f64 m = a < 0 ? -a : a;
       if ( m > amax ) amax = m;
     }
-    // the scale is stored as f16, so quantize it the way a real kernel would
+    //  the scale is stored as f16, so quantize it the way a real kernel would
     const f64 scale = amax > 0 ? static_cast<f64>(static_cast<f32>(amax / top)) : 0.0;
     for ( usize c = 0; c < cols; ++c ) {
       const f64 a = static_cast<f64>(v[r * cols + c]);
@@ -65,7 +65,7 @@ intn_rel_rmse(const f32 *v, usize rows, usize cols, u32 nbits)
   return sg > 0 ? micron::math::fsqrt(se / sg) : 0.0;
 }
 
-};      // namespace
+};      //  namespace
 
 int
 main()
@@ -87,13 +87,13 @@ main()
     ex::head(f.label);
     mc::echo(t.rows, " x ", t.cols, " f32 = ", t.elems() * 4, " bytes read");
 
-    // what the data looks like to the gain field: the number that decides the lane
+    //  what the data looks like to the gain field: the number that decides the lane
     const hsc::grange gr = hsc::gain_range(t, 4, 8);
     ex::line3("block norm ratio = ", gr.ratio, "   (dim 16, 8 gain bits resolve about 256)");
     mc::echo("blocks one full-scale would zero: ", gr.zeroed, " of ", gr.blocks);
     mc::echo("");
 
-    // hsc at three rates, against int-N at the nearest matched rate
+    //  hsc at three rates, against int-N at the nearest matched rate
     mc::echo("cell           bits/w   hsc rel-rmse   baseline        base rel-rmse   cos");
 
     struct row {

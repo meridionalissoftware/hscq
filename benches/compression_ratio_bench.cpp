@@ -133,9 +133,9 @@ main(int argc, char **argv)
       cl.rmse = __builtin_sqrt(se / static_cast<f64>(n));
       cl.psnr = psnr_of(cl.rmse);
       cl.out_bytes = zn;
-      // two deliberate conventions in one row: ratio is FRAMED (whole stream, end-to-end truth),
-      // bits_byte is PAYLOAD (record bits only, the number the rate model states) -- so
-      // ratio != 8/bits_byte by the 48-byte frame share; the report caption says so too
+      //  two deliberate conventions in one row: ratio is FRAMED (whole stream, end-to-end truth),
+      //  bits_byte is PAYLOAD (record bits only, the number the rate model states) -- so
+      //  ratio != 8/bits_byte by the 48-byte frame share; the report caption says so too
       cl.ratio = static_cast<f64>(n) / static_cast<f64>(zn);
       cl.bits_byte = static_cast<f64>(zn - 48) * 8.0 / static_cast<f64>(n);
       cl.ok = true;

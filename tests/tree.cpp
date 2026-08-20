@@ -1,8 +1,8 @@
-// The recursive construction. Guards: golden cardinalities (mod 2^64) and memo node counts
-// against the C++-exact Python mirror (scripts/compression_ratio_model.py) for dims 8..64; grid
-// table endpoints; quantize->decode->quantize field idempotence on random vectors; unit-norm
-// reconstruction; independent m_mod recompute over the arena wiring; arena oom behavior.
-// Full every-index sweeps need unrank and live in pack.cpp.
+//  The recursive construction. Guards: golden cardinalities (mod 2^64) and memo node counts
+//  against the C++-exact Python mirror (scripts/compression_ratio_model.py) for dims 8..64; grid
+//  table endpoints; quantize->decode->quantize field idempotence on random vectors; unit-norm
+//  reconstruction; independent m_mod recompute over the arena wiring; arena oom behavior.
+//  Full every-index sweeps need unrank and live in pack.cpp.
 
 #include "../src/hsc/sphere/tree.hpp"
 #include "tutil.hpp"
@@ -14,7 +14,7 @@
 namespace
 {
 
-// the grid recurrence must fold to these exact integers (one correctly-rounded multiply/step)
+//  the grid recurrence must fold to these exact integers (one correctly-rounded multiply/step)
 static_assert(hsc::k_grid.dq[0] == 33554432);
 static_assert(hsc::k_grid.dq[1] == 33388544);
 static_assert(hsc::k_grid.dq[2] == 33223476);
@@ -34,8 +34,8 @@ ct_tree_m(u32 dim_log2, u32 dq)
   return ar.nodes[static_cast<u32>(root)].m_mod;
 }
 
-static_assert(ct_tree_m(3, hsc::level_dq(3)) == 2310);       // dim 8,  d = 0.5
-static_assert(ct_tree_m(4, hsc::level_dq(3)) == 60316);      // dim 16, d = 0.5
+static_assert(ct_tree_m(3, hsc::level_dq(3)) == 2310);       //  dim 8,  d = 0.5
+static_assert(ct_tree_m(4, hsc::level_dq(3)) == 60316);      //  dim 16, d = 0.5
 
 struct golden {
   u32 dim_log2;
@@ -44,7 +44,7 @@ struct golden {
   u32 memo_nodes;
 };
 
-// from the validated mirror: M mod 2^64 and the reachable memo size
+//  from the validated mirror: M mod 2^64 and the reachable memo size
 constexpr golden k_golden[] = {
   { 3, 3, 2310ull, 4 },
   { 3, 5, 120856ull, 6 },
@@ -77,7 +77,7 @@ fields_equal(const hsc::tree_fields &a, const hsc::tree_fields &b, u32 dim_log2)
   return true;
 }
 
-}      // namespace
+}      //  namespace
 
 int
 main()

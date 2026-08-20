@@ -1,9 +1,9 @@
-// The 4D SCHF core. Guards: golden cardinalities (pinned at d_eff = d_q/2^24, cross-checked
-// against the validated Python prototype), FULL index bijection sweeps, brute-force minimum
-// pairwise distance on whole codebooks, the eq. (34) typo regression, degenerate-leaf
-// construction, refine monotonicity -- and the drift tripwire: the runtime-built skeleton's
-// stream-defining INTEGERS must equal the consteval-built ones (micron kernels vs gcc
-// constant folds may differ in f64 ulps; they may never differ in an m, n, offset or M).
+//  The 4D SCHF core. Guards: golden cardinalities (pinned at d_eff = d_q/2^24, cross-checked
+//  against the validated Python prototype), FULL index bijection sweeps, brute-force minimum
+//  pairwise distance on whole codebooks, the eq. (34) typo regression, degenerate-leaf
+//  construction, refine monotonicity -- and the drift tripwire: the runtime-built skeleton's
+//  stream-defining INTEGERS must equal the consteval-built ones (micron kernels vs gcc
+//  constant folds may differ in f64 ulps; they may never differ in an m, n, offset or M).
 
 #include "../src/hsc/sphere/s3.hpp"
 #include "tutil.hpp"
@@ -15,7 +15,7 @@
 namespace
 {
 
-constexpr u32 k_small = 160;      // leaf capacity covering every preset (worst: level 9 -> 79 leaves)
+constexpr u32 k_small = 160;      //  leaf capacity covering every preset (worst: level 9 -> 79 leaves)
 
 constexpr u64
 ct_m(u32 dq)
@@ -24,7 +24,7 @@ ct_m(u32 dq)
   return hsc::s3_build(dq, buf).m_total;
 }
 
-// golden cardinalities: the consteval path must reproduce the validated values exactly
+//  golden cardinalities: the consteval path must reproduce the validated values exactly
 static_assert(ct_m(hsc::level_dq(1)) == 16);
 static_assert(ct_m(hsc::level_dq(2)) == 52);
 static_assert(ct_m(hsc::level_dq(3)) == 138);
@@ -35,7 +35,7 @@ static_assert(ct_m(hsc::level_dq(7)) == 21844);
 static_assert(ct_m(hsc::level_dq(8)) == 178758);
 static_assert(ct_m(hsc::level_dq(9)) == 2828294);
 
-// consteval-baked integer skeletons for the drift tripwire
+//  consteval-baked integer skeletons for the drift tripwire
 struct ct_table {
   u32 count = 0;
   u32 m[k_small]{};
@@ -65,7 +65,7 @@ constexpr u32 k_levels[9] = { hsc::level_dq(1), hsc::level_dq(2), hsc::level_dq(
 constexpr ct_table k_baked[9] = { bake(k_levels[0]), bake(k_levels[1]), bake(k_levels[2]), bake(k_levels[3]), bake(k_levels[4]),
                                   bake(k_levels[5]), bake(k_levels[6]), bake(k_levels[7]), bake(k_levels[8]) };
 
-// the paper's literal eq. (34): xi1_hat = j*Dxi1 + k*Dxi2 -- kept only to prove it wrong
+//  the paper's literal eq. (34): xi1_hat = j*Dxi1 + k*Dxi2 -- kept only to prove it wrong
 u64
 quantize_paper_literal(const hsc::s3_skeleton &sk, const f64 *y)
 {
@@ -90,7 +90,7 @@ quantize_paper_literal(const hsc::s3_skeleton &sk, const f64 *y)
 
 static hsc::s3_leaf g_lv[hsc::s3_max_leaves];
 
-}      // namespace
+}      //  namespace
 
 int
 main()
@@ -123,7 +123,7 @@ main()
 
   sb::test_case("brute-force minimum pairwise distance >= d on whole codebooks");
   {
-    for ( i32 lvl : { 1, 2, 3, 4, 5 } ) {      // M up to 736
+    for ( i32 lvl : { 1, 2, 3, 4, 5 } ) {      //  M up to 736
       const hsc::s3_skeleton sk = hsc::s3_build(hsc::level_dq(lvl), g_lv);
       const u64 M = sk.m_total;
       static f64 pts[736][4];
@@ -156,19 +156,19 @@ main()
 
   sb::test_case("eq. (34) as printed breaks round-trips; the corrected form does not");
   {
-    const hsc::s3_skeleton sk = hsc::s3_build(hsc::level_dq(3), g_lv);      // d = 0.5, M = 138
+    const hsc::s3_skeleton sk = hsc::s3_build(hsc::level_dq(3), g_lv);      //  d = 0.5, M = 138
     u64 broken = 0;
     for ( u64 a = 0; a < sk.m_total; ++a ) {
       f64 p[4]{};
       hsc::s3_decode(sk, a, p);
       if ( quantize_paper_literal(sk, p) != a ) ++broken;
     }
-    sb::require(broken > 0);      // Python prototype measured 62/138; any nonzero proves the typo
+    sb::require(broken > 0);      //  Python prototype measured 62/138; any nonzero proves the typo
   }
 
   sb::test_case("degenerate leaves (eta reaching 0 / pi/2) build and round-trip");
   {
-    const u32 dq = hsc::dq_of(2.0 * micron::sin(hsc::k_pi / 16.0));      // d ~ 0.39018
+    const u32 dq = hsc::dq_of(2.0 * micron::sin(hsc::k_pi / 16.0));      //  d ~ 0.39018
     const hsc::s3_skeleton sk = hsc::s3_build(dq, g_lv);
     sb::require(sk.m_total > 0);
     for ( u64 a = 0; a < sk.m_total; ++a ) {

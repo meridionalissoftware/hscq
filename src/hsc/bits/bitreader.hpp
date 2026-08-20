@@ -10,7 +10,7 @@
 
 #include <micron/types.hpp>
 
-// 64-bit LSB-first bit reader with strict end-of-input accounting
+//  64-bit LSB-first bit reader with strict end-of-input accounting
 namespace hsc::bits
 {
 
@@ -26,8 +26,8 @@ struct bitreader {
     if !consteval {
       if ( end - p >= 8 ) {
         hold |= __load64(p) << nbits;
-        p += 7 - ((nbits >> 3) & 7);      // whole bytes actually absorbed into hold
-        nbits |= 56;                      // low 3 bits (bit phase) preserved
+        p += 7 - ((nbits >> 3) & 7);      //  whole bytes actually absorbed into hold
+        nbits |= 56;                      //  low 3 bits (bit phase) preserved
         return;
       }
     }
@@ -68,4 +68,4 @@ struct bitreader {
   }
 };
 
-};      // namespace hsc::bits
+};      //  namespace hsc::bits

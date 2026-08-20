@@ -1,32 +1,32 @@
-// The bit-exactness gate. Every fast or vectorized path in hsc carries a scalar constexpr twin,
-// because tests/comptime.cpp asserts consteval streams are byte-identical to runtime streams in
-// BOTH directions -- so a twin that differs by one ulp is a format bug, not a rounding detail.
-// This file pins each twin against its reference directly, one level below comptime.cpp, so a
-// mismatch names the kernel instead of surfacing as a mysterious stream diff.
+//  The bit-exactness gate. Every fast or vectorized path in hsc carries a scalar constexpr twin,
+//  because tests/comptime.cpp asserts consteval streams are byte-identical to runtime streams in
+//  BOTH directions -- so a twin that differs by one ulp is a format bug, not a rounding detail.
+//  This file pins each twin against its reference directly, one level below comptime.cpp, so a
+//  mismatch names the kernel instead of surfacing as a mysterious stream diff.
 //
-// Currently pinned:
-//   __round        ==  __builtin_round  (the libm call it replaces), over the ties, the sign
-//                                        cases, the specials, and hsc's live argument domain.
-//   __sqrt         ==  __builtin_sqrt   (consteval == runtime, and both == the correctly-rounded
-//                                        reference). __sqrt exists because __builtin_sqrt is NOT a
-//                                        bare sqrtsd under duck's flags: with -fmath-errno live it
-//                                        carries an errno guard and a TAIL CALL to libm, inside the
-//                                        codec's inner loops. IEEE-754 sqrt is uniquely defined, so
-//                                        the consteval fold and the hardware instruction must agree.
-//   atan2_bl_x4    ==  4x atan2_bl      (the packed quantizer kernel vs its consteval twin)
-//   atan2_bl       ==  micron::atan2    (so the branchless rewrite changed no stream at all)
-//   mk::sincos     ==  micron::sincos   (packed decode kernel vs its consteval twin, on [0,2pi))
-//   quat_mul/oct_mul consteval == runtime (the -ffp-contract tripwire: the products are pinned
-//                                        fused-op chains, so contraction can never split the sides)
+//  Currently pinned:
+//    __round        ==  __builtin_round  (the libm call it replaces), over the ties, the sign
+//                                         cases, the specials, and hsc's live argument domain.
+//    __sqrt         ==  __builtin_sqrt   (consteval == runtime, and both == the correctly-rounded
+//                                         reference). __sqrt exists because __builtin_sqrt is NOT a
+//                                         bare sqrtsd under duck's flags: with -fmath-errno live it
+//                                         carries an errno guard and a TAIL CALL to libm, inside the
+//                                         codec's inner loops. IEEE-754 sqrt is uniquely defined, so
+//                                         the consteval fold and the hardware instruction must agree.
+//    atan2_bl_x4    ==  4x atan2_bl      (the packed quantizer kernel vs its consteval twin)
+//    atan2_bl       ==  micron::atan2    (so the branchless rewrite changed no stream at all)
+//    mk::sincos     ==  micron::sincos   (packed decode kernel vs its consteval twin, on [0,2pi))
+//    quat_mul/oct_mul consteval == runtime (the -ffp-contract tripwire: the products are pinned
+//                                         fused-op chains, so contraction can never split the sides)
 //
-// The last three are what let tests/comptime.cpp keep asserting consteval == runtime through a
-// vectorized codec: if any of them drifts by one ulp, a stream silently changes shape.
+//  The last three are what let tests/comptime.cpp keep asserting consteval == runtime through a
+//  vectorized codec: if any of them drifts by one ulp, a stream silently changes shape.
 //
-// The test points are built with micron::math::ldexp / nextafter, not the __builtin_ forms: gcc
-// expands __builtin_round inline (roundsd) but lowers those two to libm CALLS, and the suite links
-// -ffreestanding -nostdlib against a corelib that deliberately exports no such symbols
-// (micron/math/__gcc_math_syms.hpp says so in as many words). Both are exact bit manipulations, so
-// the generated arguments are identical either way -- this is scaffolding, never the thing pinned.
+//  The test points are built with micron::math::ldexp / nextafter, not the __builtin_ forms: gcc
+//  expands __builtin_round inline (roundsd) but lowers those two to libm CALLS, and the suite links
+//  -ffreestanding -nostdlib against a corelib that deliberately exports no such symbols
+//  (micron/math/__gcc_math_syms.hpp says so in as many words). Both are exact bit manipulations, so
+//  the generated arguments are identical either way -- this is scaffolding, never the thing pinned.
 
 #include "../src/hsc/codec/oct.hpp"
 #include "../src/hsc/config.hpp"
@@ -50,26 +50,26 @@ ubits(f64 v) noexcept
   return __builtin_bit_cast(u64, v);
 }
 
-// consteval side: __round must fold to __builtin_round exactly (this is the twin contract)
+//  consteval side: __round must fold to __builtin_round exactly (this is the twin contract)
 static_assert(ubits(hsc::__round(0.5)) == ubits(1.0));
 static_assert(ubits(hsc::__round(-0.5)) == ubits(-1.0));
 static_assert(ubits(hsc::__round(1.5)) == ubits(2.0));
-static_assert(ubits(hsc::__round(2.5)) == ubits(3.0));      // away from zero, NOT banker's
+static_assert(ubits(hsc::__round(2.5)) == ubits(3.0));      //  away from zero, NOT banker's
 static_assert(ubits(hsc::__round(-2.5)) == ubits(-3.0));
-static_assert(ubits(hsc::__round(0.49999999999999994)) == ubits(0.0));      // the classic +0.5 trap
+static_assert(ubits(hsc::__round(0.49999999999999994)) == ubits(0.0));      //  the classic +0.5 trap
 static_assert(ubits(hsc::__round(0.0)) == ubits(0.0));
-static_assert(ubits(hsc::__round(-0.0)) == ubits(-0.0));      // sign of zero is preserved
+static_assert(ubits(hsc::__round(-0.0)) == ubits(-0.0));      //  sign of zero is preserved
 static_assert(ubits(hsc::__round(-0.25)) == ubits(-0.0));
 
-// consteval side: __sqrt must fold exactly. IEEE-754 square root is correctly rounded and unique,
-// so there is only one right answer and both sides of the twin have to produce it.
+//  consteval side: __sqrt must fold exactly. IEEE-754 square root is correctly rounded and unique,
+//  so there is only one right answer and both sides of the twin have to produce it.
 static_assert(ubits(hsc::__sqrt(0.0)) == ubits(0.0));
-static_assert(ubits(hsc::__sqrt(-0.0)) == ubits(-0.0));      // sign of zero is preserved
+static_assert(ubits(hsc::__sqrt(-0.0)) == ubits(-0.0));      //  sign of zero is preserved
 static_assert(hsc::__sqrt(1.0) == 1.0);
 static_assert(hsc::__sqrt(4.0) == 2.0);
 static_assert(hsc::__sqrt(2.25) == 1.5);
 static_assert(hsc::__sqrt(1e10) == 100000.0);
-static_assert(ubits(hsc::__sqrt(2.0)) == ubits(__builtin_sqrt(2.0)));      // the irrational case
+static_assert(ubits(hsc::__sqrt(2.0)) == ubits(__builtin_sqrt(2.0)));      //  the irrational case
 
 u64 g_seed = 0x9E3779B97F4A7C15ull;
 
@@ -82,11 +82,11 @@ xs() noexcept
   return g_seed;
 }
 
-// consteval-baked quat/oct products over a fixed integer-derived grid: main() recomputes the
-// SAME rows at runtime and requires bit identity. This is the localized -ffp-contract tripwire:
-// the build passes no contraction flag, consteval never contracts, and the product kernels are
-// written as explicit fused-op chains precisely so both sides round identically. If a compiler
-// or flag change ever splits them, this case names the kernel instead of a mysterious stream diff.
+//  consteval-baked quat/oct products over a fixed integer-derived grid: main() recomputes the
+//  SAME rows at runtime and requires bit identity. This is the localized -ffp-contract tripwire:
+//  the build passes no contraction flag, consteval never contracts, and the product kernels are
+//  written as explicit fused-op chains precisely so both sides round identically. If a compiler
+//  or flag change ever splits them, this case names the kernel instead of a mysterious stream diff.
 inline constexpr usize k_alg_rows = 64;
 
 struct alg_baked {
@@ -107,7 +107,7 @@ bake_alg()
     s ^= s << 13;
     s ^= s >> 7;
     s ^= s << 17;
-    // integer-exact map to [-2, 2): identical consteval and runtime by construction
+    //  integer-exact map to [-2, 2): identical consteval and runtime by construction
     return static_cast<f64>(s >> 11) * 0x1p-53 * 4.0 - 2.0;
   };
   for ( usize r = 0; r < k_alg_rows; ++r ) {
@@ -123,10 +123,10 @@ bake_alg()
 
 inline constexpr alg_baked k_alg = bake_alg();
 
-// consteval-baked __sqrt over a fixed integer-derived grid; main() recomputes the SAME rows at
-// runtime and requires bit identity. __sqrt is an `if consteval` twin (the consteval branch folds
-// __builtin_sqrt, the runtime branch issues vsqrtsd), so this is the case that actually pins the
-// split -- a randomized sweep only ever exercises one side of it.
+//  consteval-baked __sqrt over a fixed integer-derived grid; main() recomputes the SAME rows at
+//  runtime and requires bit identity. __sqrt is an `if consteval` twin (the consteval branch folds
+//  __builtin_sqrt, the runtime branch issues vsqrtsd), so this is the case that actually pins the
+//  split -- a randomized sweep only ever exercises one side of it.
 inline constexpr usize k_sqrt_rows = 512;
 
 struct sqrt_baked {
@@ -143,7 +143,7 @@ bake_sqrt()
     s ^= s << 13;
     s ^= s >> 7;
     s ^= s << 17;
-    // integer-exact map to [0, 4): identical consteval and runtime by construction
+    //  integer-exact map to [0, 4): identical consteval and runtime by construction
     t.in[r] = static_cast<f64>(s >> 11) * 0x1p-53 * 4.0;
     t.out[r] = hsc::__sqrt(t.in[r]);
   }
@@ -152,7 +152,7 @@ bake_sqrt()
 
 inline constexpr sqrt_baked k_sqrt = bake_sqrt();
 
-}      // namespace
+}      //  namespace
 
 int
 main()
@@ -172,8 +172,8 @@ main()
   sb::test_case("__round == __builtin_round: neighbours of every tie across the exponent range");
   {
     u64 bad = 0;
-    // |x| < 2^52 is hsc's whole live domain: every round() argument in the codec is a ratio of
-    // an angle to a grid step (bounded by a leaf/band count) or a byte-scale value.
+    //  |x| < 2^52 is hsc's whole live domain: every round() argument in the codec is a ratio of
+    //  an angle to a grid step (bounded by a leaf/band count) or a byte-scale value.
     for ( i32 e = -20; e <= 51; ++e ) {
       for ( i64 k = -400; k <= 400; ++k ) {
         const f64 base = static_cast<f64>(k) * micron::math::ldexp<f64>(1.0, e) * 0.5;
@@ -211,14 +211,14 @@ main()
     sb::require(ubits(hsc::__round(inf)), ubits(__builtin_round(inf)));
     sb::require(ubits(hsc::__round(-inf)), ubits(__builtin_round(-inf)));
     sb::require(__builtin_isnan(hsc::__round(__builtin_nan(""))));
-    // integral inputs must come back untouched, sign of zero included
+    //  integral inputs must come back untouched, sign of zero included
     u64 bad = 0;
     for ( i64 k = -100000; k <= 100000; ++k ) {
       const f64 x = static_cast<f64>(k);
       if ( ubits(hsc::__round(x)) != ubits(__builtin_round(x)) ) ++bad;
     }
     sb::require(bad, 0ull);
-    // the denormal floor and the smallest normals round to a signed zero, not to a trap
+    //  the denormal floor and the smallest normals round to a signed zero, not to a trap
     sb::require(ubits(hsc::__round(5e-324)), ubits(__builtin_round(5e-324)));
     sb::require(ubits(hsc::__round(-5e-324)), ubits(__builtin_round(-5e-324)));
   }
@@ -241,7 +241,7 @@ main()
     }
     sb::require(bad, 0ull);
 
-    // perfect squares must come back exact, not one ulp low
+    //  perfect squares must come back exact, not one ulp low
     for ( i64 k = 0; k <= 100000; ++k ) {
       const f64 x = static_cast<f64>(k);
       if ( ubits(hsc::__sqrt(x * x)) != ubits(x) ) ++bad;
@@ -253,7 +253,7 @@ main()
   {
     const f64 inf = __builtin_inf();
     sb::require(ubits(hsc::__sqrt(0.0)), ubits(0.0));
-    sb::require(ubits(hsc::__sqrt(-0.0)), ubits(-0.0));      // sqrt(-0) is -0, not +0
+    sb::require(ubits(hsc::__sqrt(-0.0)), ubits(-0.0));      //  sqrt(-0) is -0, not +0
     sb::require(ubits(hsc::__sqrt(inf)), ubits(__builtin_sqrt(inf)));
     sb::require(__builtin_isnan(hsc::__sqrt(__builtin_nan(""))));
     sb::require(ubits(hsc::__sqrt(5e-324)), ubits(__builtin_sqrt(5e-324)));
@@ -278,7 +278,7 @@ main()
     }
     sb::require(bad, 0ull);
 
-    // every edge the packed kernel screens for, and mixtures of them inside one vector
+    //  every edge the packed kernel screens for, and mixtures of them inside one vector
     const f64 sp[10] = { 0.0, -0.0, 1.0, -1.0, __builtin_inf(), -__builtin_inf(), 1e300, -1e-300, 5e-324, -3.5 };
     u64 bad2 = 0;
     for ( u32 a = 0; a < 10; ++a )

@@ -1,8 +1,8 @@
-// End-to-end container round-trips for every mode across dims and levels: exact deterministic
-// stream sizes, tail handling, distortion envelopes (statistical -- see block.hpp on packing
-// vs covering), bound() >= actual (and scratch-bound == actual), the short-output/short-cap
-// contracts, typed-lane mode policing, scratch reuse across parameter changes, and the
-// transform lane (bit2 round trips at unchanged rate, the spiky-bytes win, quotient forced off).
+//  End-to-end container round-trips for every mode across dims and levels: exact deterministic
+//  stream sizes, tail handling, distortion envelopes (statistical -- see block.hpp on packing
+//  vs covering), bound() >= actual (and scratch-bound == actual), the short-output/short-cap
+//  contracts, typed-lane mode policing, scratch reuse across parameter changes, and the
+//  transform lane (bit2 round trips at unchanged rate, the spiky-bytes win, quotient forced off).
 
 #include "../src/hsc/hsc.hpp"
 #include "tutil.hpp"
@@ -38,8 +38,8 @@ smooth_bytes(usize n, tutil::rng &g)
   return v;
 }
 
-// the transform's target workload: one full-scale excursion per 8 bytes on a 0x80 floor --
-// centered, (almost) axis-aligned spikes, the packing-not-covering worst case
+//  the transform's target workload: one full-scale excursion per 8 bytes on a 0x80 floor --
+//  centered, (almost) axis-aligned spikes, the packing-not-covering worst case
 micron::vector<u8>
 spiky_bytes(usize n, tutil::rng &g)
 {
@@ -53,7 +53,7 @@ spiky_bytes(usize n, tutil::rng &g)
   return v;
 }
 
-}      // namespace
+}      //  namespace
 
 int
 main()
@@ -65,13 +65,13 @@ main()
   {
     for ( u32 dl = 2; dl <= 6; ++dl ) {
       for ( i32 lvl : { 3, 6 } ) {
-        const usize n_in = 2048 + dl;      // deliberately not block-aligned
+        const usize n_in = 2048 + dl;      //  deliberately not block-aligned
         const auto src = noise_bytes(n_in, g);
         const hsc::hopf_opts o{ .level = lvl, .dim_log2 = dl };
         hsc::fhsc z = hsc::hopf(tutil::view(src), o, sc);
         sb::require(z.size() > 0);
         sb::require(z.size() <= hsc::bound(n_in, o));
-        sb::require(z.size(), hsc::bound(n_in, o, sc));      // scratch bound is exact
+        sb::require(z.size(), hsc::bound(n_in, o, sc));      //  scratch bound is exact
 
         auto back = hsc::unhopf(hsc::bytes{ z.first(), z.size() }, sc);
         sb::require(back.is_first());
@@ -99,8 +99,8 @@ main()
       }
       const f64 rmse = __builtin_sqrt(se / static_cast<f64>(n_in));
       const f64 d = hsc::d_of(hsc::level_dq(lvl));
-      sb::require(rmse <= 127.5 * 2.0 * d * 2.5);      // loose absolute envelope
-      sb::require(rmse <= prev_rmse + 1e-9);           // finer level never gets worse
+      sb::require(rmse <= 127.5 * 2.0 * d * 2.5);      //  loose absolute envelope
+      sb::require(rmse <= prev_rmse + 1e-9);           //  finer level never gets worse
       prev_rmse = rmse;
     }
   }
@@ -113,7 +113,7 @@ main()
         const auto src = noise_bytes(n_in, g);
         const hsc::hopf_opts o{ .level = lvl, .dim_log2 = dl, .transform = true };
         hsc::fhsc z = hsc::hopf(tutil::view(src), o, sc);
-        sb::require(z.size(), hsc::bound(n_in, o, sc));      // analog-side: rate is untouched
+        sb::require(z.size(), hsc::bound(n_in, o, sc));      //  analog-side: rate is untouched
         auto pi = hsc::hopf_probe(hsc::bytes{ z.first(), z.size() });
         sb::require(pi.is_first());
         sb::require(pi.cast<hsc::hopf_info>().transform);
@@ -143,7 +143,7 @@ main()
         }
         rmse[tf] = __builtin_sqrt(se / static_cast<f64>(n_in));
       }
-      sb::require(rmse[1] < rmse[0]);      // decisive in the benches; here just strictly better
+      sb::require(rmse[1] < rmse[0]);      //  decisive in the benches; here just strictly better
     }
   }
 
@@ -160,7 +160,7 @@ main()
   {
     for ( u32 dl : { 2u, 3u, 4u } ) {
       const u32 n = 1u << dl;
-      const usize elems = 256 * n + n / 2;      // partial tail block
+      const usize elems = 256 * n + n / 2;      //  partial tail block
       micron::vector<f32> src;
       src.reserve(elems + 1);
       for ( usize i = 0; i < elems; ++i ) src.push_back(static_cast<f32>(g.unit() * 3.0));
@@ -186,7 +186,7 @@ main()
         se += e * e;
       }
       const u64 nb = (elems + n - 1) / n;
-      // per-block error envelope 2.5 g d + gain step, g <= scale
+      //  per-block error envelope 2.5 g d + gain step, g <= scale
       const f64 env = 2.5 * scale * d + scale / 1023.0;
       sb::require(__builtin_sqrt(se / static_cast<f64>(nb)) <= env);
     }
@@ -241,7 +241,7 @@ main()
       }
       sb::require(__builtin_sqrt(e2) <= d * 2.5 + 1e-6);
     }
-    // ragged length refuses
+    //  ragged length refuses
     micron::vector<f32> ragged;
     ragged.reserve(n + 4);
     for ( u32 i = 0; i < n + 3; ++i ) ragged.push_back(0.5f);
@@ -261,7 +261,7 @@ main()
     sb::require(zr.is_first());
     auto &z = zr.cast<hsc::fhsc>();
 
-    // rotating every pair by a global phase must give the identical stream
+    //  rotating every pair by a global phase must give the identical stream
     micron::vector<f32> rot;
     rot.reserve(elems + 1);
     {
@@ -285,7 +285,7 @@ main()
     auto &b = back.cast<hsc::fhsc32>();
     sb::require(b.size(), elems);
     for ( usize blk = 0; blk < elems / 4; ++blk ) {
-      sb::require(static_cast<f64>(b.first()[blk * 4]) >= 0.0);      // canonical z0 real >= 0
+      sb::require(static_cast<f64>(b.first()[blk * 4]) >= 0.0);      //  canonical z0 real >= 0
       sb::require(b.first()[blk * 4 + 1] == 0.0f);
     }
   }
@@ -301,7 +301,7 @@ main()
     sb::require(zr.is_first());
     auto &z = zr.cast<hsc::fhsc>();
 
-    // right-multiplying every pair by ONE global unit quaternion must give the identical stream
+    //  right-multiplying every pair by ONE global unit quaternion must give the identical stream
     f64 gu[4] = { 0.3, -0.5, 0.4, 0.7 };
     {
       const f64 n = __builtin_sqrt(hsc::__fma_norm2(gu, 4));
@@ -331,11 +331,11 @@ main()
     auto &b = back.cast<hsc::fhsc32>();
     sb::require(b.size(), elems);
     for ( usize blk = 0; blk < elems / 8; ++blk ) {
-      for ( u32 k = 0; k < 3; ++k ) sb::require(b.first()[blk * 8 + k] == 0.0f);      // canonical q0 = (0,0,0,c)
+      for ( u32 k = 0; k < 3; ++k ) sb::require(b.first()[blk * 8 + k] == 0.0f);      //  canonical q0 = (0,0,0,c)
       sb::require(static_cast<f64>(b.first()[blk * 8 + 3]) >= 0.0);
     }
 
-    // ragged length refuses
+    //  ragged length refuses
     micron::vector<f32> ragged;
     ragged.reserve(21);
     for ( u32 i = 0; i < 20; ++i ) ragged.push_back(0.5f);
@@ -355,8 +355,8 @@ main()
     sb::require(zr.is_first());
     auto &z = zr.cast<hsc::fhsc>();
 
-    // replace every pair by a fiber mate through one fixed unit octonion (the graph-sphere
-    // parametrization: y = s u, x = (v u)/(2s)) -- must give the identical stream
+    //  replace every pair by a fiber mate through one fixed unit octonion (the graph-sphere
+    //  parametrization: y = s u, x = (v u)/(2s)) -- must give the identical stream
     f64 u[8] = { 0.2, -0.4, 0.1, 0.6, -0.3, 0.2, 0.4, 0.35 };
     {
       const f64 n = __builtin_sqrt(hsc::__fma_norm2(u, 8));
@@ -397,11 +397,11 @@ main()
     auto &b = back.cast<hsc::fhsc32>();
     sb::require(b.size(), elems);
     for ( usize blk = 0; blk < elems / 16; ++blk ) {
-      for ( u32 k = 0; k < 7; ++k ) sb::require(b.first()[blk * 16 + k] == 0.0f);      // canonical o0 = (0,...,0,c)
+      for ( u32 k = 0; k < 7; ++k ) sb::require(b.first()[blk * 16 + k] == 0.0f);      //  canonical o0 = (0,...,0,c)
       sb::require(static_cast<f64>(b.first()[blk * 16 + 7]) >= 0.0);
     }
 
-    // ragged length refuses
+    //  ragged length refuses
     micron::vector<f32> ragged;
     ragged.reserve(25);
     for ( u32 i = 0; i < 24; ++i ) ragged.push_back(0.5f);
@@ -414,7 +414,7 @@ main()
   {
     const u32 n = 8;
     const f64 d = hsc::d_of(hsc::level_dq(6));
-    const usize elems = 256 * n + n / 2;      // partial tail block
+    const usize elems = 256 * n + n / 2;      //  partial tail block
     micron::vector<f32> src;
     src.reserve(elems + 1);
     for ( usize i = 0; i < elems; ++i ) src.push_back(static_cast<f32>(g.unit() * 3.0));
@@ -464,7 +464,7 @@ main()
       sb::require(__builtin_sqrt(e2) <= d * 2.5 + 1e-6);
     }
 
-    // the quotient family: .transform = true is accepted but resolve forces it off the wire
+    //  the quotient family: .transform = true is accepted but resolve forces it off the wire
     for ( hsc::mode fm : { hsc::mode::quotient, hsc::mode::quat, hsc::mode::oct } ) {
       const usize be = fm == hsc::mode::quotient ? 4 : (fm == hsc::mode::quat ? 8 : 16);
       micron::vector<f32> qs;

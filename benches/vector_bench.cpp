@@ -1,27 +1,27 @@
-// hsc on real open-weight model tensors: what a fixed-rate spherical code costs a weight matrix
-// and an embedding table. scripts/corpus.py exports tensors from safetensors as raw f32 into
-// corpus/models/; this bench runs them through the vec and unit lanes and reports bits/weight
-// against the int8/int4/int2 rates a quantizer would charge for the same storage.
+//  hsc on real open-weight model tensors: what a fixed-rate spherical code costs a weight matrix
+//  and an embedding table. scripts/corpus.py exports tensors from safetensors as raw f32 into
+//  corpus/models/; this bench runs them through the vec and unit lanes and reports bits/weight
+//  against the int8/int4/int2 rates a quantizer would charge for the same storage.
 //
-// Two modes:
-//   ./bin/vector_bench                       grid over corpus/models/manifest-listed tensors
-//   ./bin/vector_bench --in a.f32 --out b.f32 --mode unit --dim 8 --level 6
-//                                            round-trip one file and write the decoded f32 back,
-//                                            so scripts/vector_eval.py can do cosine and recall@k
-//                                            in numpy instead of here
+//  Two modes:
+//    ./bin/vector_bench                       grid over corpus/models/manifest-listed tensors
+//    ./bin/vector_bench --in a.f32 --out b.f32 --mode unit --dim 8 --level 6
+//                                             round-trip one file and write the decoded f32 back,
+//                                             so scripts/vector_eval.py can do cosine and recall@k
+//                                             in numpy instead of here
 //
-// PER TENSOR, NEVER ONE BIG STREAM. vec mode takes gmax over the WHOLE input in a first pass
-// (hopf.hpp), so concatenating tensors lets one outlier weight crush the gain resolution of every
-// other tensor. Each file is encoded on its own; that is what makes the numbers mean anything.
+//  PER TENSOR, NEVER ONE BIG STREAM. vec mode takes gmax over the WHOLE input in a first pass
+//  (hopf.hpp), so concatenating tensors lets one outlier weight crush the gain resolution of every
+//  other tensor. Each file is encoded on its own; that is what makes the numbers mean anything.
 //
-// THE QUOTIENT FAMILY (quotient, quat, oct) IS EXCLUDED, deliberately. Those modes quotient out
-// a fiber symmetry on complex/quaternion/octonion pairs; weights and embeddings carry no such
-// symmetry, so the modes would discard 1/3/7 REAL dimensions per pair rather than redundancy,
-// and their decodes return canonical representatives that no coordinate-wise error metric can
-// fairly score.
+//  THE QUOTIENT FAMILY (quotient, quat, oct) IS EXCLUDED, deliberately. Those modes quotient out
+//  a fiber symmetry on complex/quaternion/octonion pairs; weights and embeddings carry no such
+//  symmetry, so the modes would discard 1/3/7 REAL dimensions per pair rather than redundancy,
+//  and their decodes return canonical representatives that no coordinate-wise error metric can
+//  fairly score.
 //
-//   duck build benches/vector_bench.cpp --perf --fp -i ../micron -i ../micron/src
-// NOTE the include order: hsc before bbench (__bitwise macro, see hopf_bench.cpp).
+//    duck build benches/vector_bench.cpp --perf --fp -i ../micron -i ../micron/src
+//  NOTE the include order: hsc before bbench (__bitwise macro, see hopf_bench.cpp).
 #include "_files.hpp"
 
 #include "_bench_common.hpp"
@@ -30,24 +30,24 @@
 #define HSC_CORPUS_DIR "corpus"
 #endif
 
-static constexpr usize k_cap = 48u << 20;      // 12 Mi floats: enough for a 30k x 384 embedding table
+static constexpr usize k_cap = 48u << 20;      //  12 Mi floats: enough for a 30k x 384 embedding table
 static constexpr usize k_zcap = 32u << 20;
 
 static u8 g_in[k_cap];
 static u8 g_z[k_zcap];
 static u8 g_out[k_cap];
 
-// tensors the grid runs when no --in is given; scripts/corpus.py writes these names
+//  tensors the grid runs when no --in is given; scripts/corpus.py writes these names
 struct tfile {
   const char *label;
   const char *file;
 };
 
 static constexpr tfile k_tensors[] = {
-  { "MiniLM embed", "models/all-MiniLM-L6-v2.embeddings_word_embeddings_weight.f32" },            // 30522 x 384
-  { "MiniLM mlp", "models/all-MiniLM-L6-v2.encoder_layer_0_intermediate_dense_weight.f32" },      // 1536 x 384
-  { "SmolLM embed", "models/SmolLM2-135M.model_embed_tokens_weight.f32" },                        // 49152 x 576, read as a prefix
-  { "SmolLM mlp", "models/SmolLM2-135M.model_layers_0_mlp_gate_proj_weight.f32" },                // 1536 x 576
+  { "MiniLM embed", "models/all-MiniLM-L6-v2.embeddings_word_embeddings_weight.f32" },            //  30522 x 384
+  { "MiniLM mlp", "models/all-MiniLM-L6-v2.encoder_layer_0_intermediate_dense_weight.f32" },      //  1536 x 384
+  { "SmolLM embed", "models/SmolLM2-135M.model_embed_tokens_weight.f32" },                        //  49152 x 576, read as a prefix
+  { "SmolLM mlp", "models/SmolLM2-135M.model_layers_0_mlp_gate_proj_weight.f32" },                //  1536 x 576
 };
 static constexpr usize k_ntensor = sizeof(k_tensors) / sizeof(k_tensors[0]);
 
@@ -87,7 +87,7 @@ to_i(const char *s) noexcept
   return neg ? -v : v;
 }
 
-// L2-normalize every dim-element block in place; returns the number of blocks left at zero norm
+//  L2-normalize every dim-element block in place; returns the number of blocks left at zero norm
 static usize
 normalize_blocks(f32 *v, usize n, u32 dim) noexcept
 {
@@ -96,7 +96,7 @@ normalize_blocks(f32 *v, usize n, u32 dim) noexcept
     f64 s = 0;
     for ( u32 c = 0; c < dim; ++c ) s += static_cast<f64>(v[b + c]) * static_cast<f64>(v[b + c]);
     if ( s <= 0.0 ) {
-      v[b] = 1.0f;      // unit mode rejects a zero-norm block (bad_value); pin it to a basis vector
+      v[b] = 1.0f;      //  unit mode rejects a zero-norm block (bad_value); pin it to a basis vector
       ++zero;
       continue;
     }
@@ -139,8 +139,8 @@ cfg_name(const cfg &c) noexcept
   return nm;
 }
 
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// filter mode: one file in, one file out, so numpy can score it
+//  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//  filter mode: one file in, one file out, so numpy can score it
 
 static int
 filter(const char *in, const char *out, hsc::mode m, u32 dl, i32 lvl, bool norm)
@@ -153,7 +153,7 @@ filter(const char *in, const char *out, hsc::mode m, u32 dl, i32 lvl, bool norm)
   const usize nf = static_cast<usize>(got) / 4;
   f32 *fin = reinterpret_cast<f32 *>(g_in);
   const u32 dim = 1u << dl;
-  const usize whole = (nf / dim) * dim;      // unit/quotient reject a partial block
+  const usize whole = (nf / dim) * dim;      //  unit/quotient reject a partial block
   if ( norm || m == hsc::mode::unit ) normalize_blocks(fin, whole, dim);
 
   hsc::hopf_scratch sc;
@@ -172,8 +172,8 @@ filter(const char *in, const char *out, hsc::mode m, u32 dl, i32 lvl, bool norm)
     micron::io::println("vector_bench: cannot write ", out);
     return 5;
   }
-  // the reference input as the encoder actually saw it (normalized, whole blocks only), so the
-  // scorer compares like with like
+  //  the reference input as the encoder actually saw it (normalized, whole blocks only), so the
+  //  scorer compares like with like
   char ref[hf::k_path_max];
   usize k = 0;
   for ( const char *p = out; *p && k + 5 < hf::k_path_max; ++p ) ref[k++] = *p;
@@ -238,7 +238,7 @@ main(int argc, char **argv)
     grid_header();
     for ( u32 lane = 0; lane < 2; ++lane ) {
       const hsc::mode lm = lane == 0 ? hsc::mode::vec : hsc::mode::unit;
-      u32 loaded_dim = 0;      // the unit lane normalizes in place, and the block size sets the norms
+      u32 loaded_dim = 0;      //  the unit lane normalizes in place, and the block size sets the norms
       if ( lane == 1 ) loaded_dim = 0;
       for ( usize ci = 0; ci < k_ncfg; ++ci ) {
         const u32 dim = 1u << k_cfgs[ci].dl;

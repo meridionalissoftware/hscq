@@ -1,8 +1,8 @@
-// The comptime contract. Building this file IS most of the test: the static_asserts prove the
-// consteval codec (golden cardinalities, whole-container round-trips in constant evaluation
-// for every mode). main() adds the determinism half: the consteval-built stream must be
-// byte-identical to the runtime encoder's output for the same input -- compiler constant-fold
-// trig on one side, micron kernels on the other, one wire format out of both.
+//  The comptime contract. Building this file IS most of the test: the static_asserts prove the
+//  consteval codec (golden cardinalities, whole-container round-trips in constant evaluation
+//  for every mode). main() adds the determinism half: the consteval-built stream must be
+//  byte-identical to the runtime encoder's output for the same input -- compiler constant-fold
+//  trig on one side, micron kernels on the other, one wire format out of both.
 
 #include "../src/hsc/hsc.hpp"
 #include "tutil.hpp"
@@ -14,7 +14,7 @@
 namespace
 {
 
-// golden cardinalities through the ct probes
+//  golden cardinalities through the ct probes
 static_assert(hsc::ct::s3_m<hsc::level_dq(3)>() == 138);
 static_assert(hsc::ct::s3_m<hsc::level_dq(6)>() == 2588);
 static_assert(hsc::ct::s3_m<hsc::level_dq(9)>() == 2828294);
@@ -30,8 +30,8 @@ static_assert(hsc::ct::s8_m<hsc::level_dq(3)>() == 4552);
 static_assert(hsc::ct::s8_m<hsc::level_dq(6)>() == 10923842);
 static_assert(hsc::ct::s8_bits<hsc::level_dq(6)>() == 24);
 
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// bin: compress a body at compile time, decode it back at compile time
+//  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//  bin: compress a body at compile time, decode it back at compile time
 
 inline constexpr hsc::ct::str kBody{ "the quick brown fox jumps over the lazy dog, hopfed and unhopfed at compile time" };
 inline constexpr hsc::hopf_opts kBinOpts{ .level = 6, .dim_log2 = 3 };
@@ -42,7 +42,7 @@ static_assert(kZ.len > hsc::k_header_size + hsc::k_trailer_size);
 static_assert(kZ.len <= hsc::bound(kBody.len, kBinOpts));
 static_assert(kBack.len == kBody.len);
 
-// lossy but bounded: per-byte error under the coarse level 6 envelope, verified consteval
+//  lossy but bounded: per-byte error under the coarse level 6 envelope, verified consteval
 consteval bool
 bin_close()
 {
@@ -55,35 +55,35 @@ bin_close()
 
 static_assert(bin_close());
 
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// the bit-exact cell, proven in the type system
+//  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//  the bit-exact cell, proven in the type system
 //
-// hsc::opts_exact_bytes (dim 4, L13) is the cell BENCHMARKS.md measures at rmse 0.00 / psnr 99.99 --
-// the bench clamps psnr to 99.99 below rmse 1e-9 and an integer rmse is 0 or >= 1/sqrt(n), so that
-// column means EXACT. Here the compiler proves it for one payload rather than trusting the sweep.
-// Kept short on purpose: the cost is the 1571-row s3 skeleton the constant evaluator has to build,
-// and this file compiles at the default -fconstexpr-ops-limit.
+//  hsc::opts_exact_bytes (dim 4, L13) is the cell BENCHMARKS.md measures at rmse 0.00 / psnr 99.99 --
+//  the bench clamps psnr to 99.99 below rmse 1e-9 and an integer rmse is 0 or >= 1/sqrt(n), so that
+//  column means EXACT. Here the compiler proves it for one payload rather than trusting the sweep.
+//  Kept short on purpose: the cost is the 1571-row s3 skeleton the constant evaluator has to build,
+//  and this file compiles at the default -fconstexpr-ops-limit.
 inline constexpr hsc::ct::str kExactBody{ "exact bytes, at compile time." };
 inline constexpr auto kZe = hsc::ct::hopf<kExactBody, hsc::opts_exact_bytes>();
 inline constexpr auto kBe = hsc::ct::unhopf<kZe>();
 
-static_assert(hsc::exact_bytes(hsc::opts_exact_bytes));      // the cell claim
-static_assert(hsc::ct::exact<kExactBody, kBe>());            // the payload proof
+static_assert(hsc::exact_bytes(hsc::opts_exact_bytes));      //  the cell claim
+static_assert(hsc::ct::exact<kExactBody, kBe>());            //  the payload proof
 static_assert(hsc::ct::max_byte_err<kExactBody, kBe>() == 0);
-static_assert(kZe.len > kExactBody.len);      // 10.75 bits/byte: exactness EXPANDS
+static_assert(kZe.len > kExactBody.len);      //  10.75 bits/byte: exactness EXPANDS
 
-// and the coarse cell above is genuinely not exact, so the assert above is testing something
+//  and the coarse cell above is genuinely not exact, so the assert above is testing something
 static_assert(hsc::ct::max_byte_err<kBody, kBack>() > 0);
 
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// the transform lane: bit2 streams are part of the determinism contract too
+//  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//  the transform lane: bit2 streams are part of the determinism contract too
 
 inline constexpr hsc::hopf_opts kBinRotOpts{ .level = 6, .dim_log2 = 3, .transform = true };
 inline constexpr auto kZr = hsc::ct::hopf<kBody, kBinRotOpts>();
 inline constexpr auto kBackr = hsc::ct::unhopf<kZr>();
 
-static_assert(kZr.len == kZ.len);        // analog-side: identical rate
-static_assert(kZr.data[5] == 0x07);      // exact_pack | has_gain | transform
+static_assert(kZr.len == kZ.len);        //  analog-side: identical rate
+static_assert(kZr.data[5] == 0x07);      //  exact_pack | has_gain | transform
 static_assert(kBackr.len == kBody.len);
 
 consteval bool
@@ -98,8 +98,8 @@ bin_rot_close()
 
 static_assert(bin_rot_close());
 
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// float lanes at compile time: vec, unit, quotient
+//  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//  float lanes at compile time: vec, unit, quotient
 
 inline constexpr auto kF = []() {
   hsc::ct::f32s<16> f{};
@@ -138,7 +138,7 @@ inline constexpr auto kZq = hsc::ct::hopf<kU, kQuotOpts>();
 inline constexpr auto kBq = hsc::ct::unhopf_f32<kZq>();
 static_assert(kBq.len == 16);
 
-// the sibling quotient lanes reuse the same 16-float unit fixture: 2 quat blocks / 1 oct block
+//  the sibling quotient lanes reuse the same 16-float unit fixture: 2 quat blocks / 1 oct block
 inline constexpr hsc::hopf_opts kQuatOpts{ .m = hsc::mode::quat, .level = 5 };
 inline constexpr auto kZq4 = hsc::ct::hopf<kU, kQuatOpts>();
 inline constexpr auto kBq4 = hsc::ct::unhopf_f32<kZq4>();
@@ -149,7 +149,7 @@ inline constexpr auto kZq8 = hsc::ct::hopf<kU, kOctOpts>();
 inline constexpr auto kBq8 = hsc::ct::unhopf_f32<kZq8>();
 static_assert(kBq8.len == 16);
 
-// the raw-bytes ct surface serializes float-mode output as little-endian f32s
+//  the raw-bytes ct surface serializes float-mode output as little-endian f32s
 inline constexpr auto kBvRaw = hsc::ct::unhopf<kZv>();
 static_assert(kBvRaw.len == 64);
 
@@ -163,7 +163,7 @@ raw_matches_typed()
 
 static_assert(raw_matches_typed());
 
-}      // namespace
+}      //  namespace
 
 int
 main()
@@ -200,7 +200,7 @@ main()
     auto b = hsc::unhopf(hsc::bytes{ kZe.data, kZe.len }, sc);
     sb::require(b.is_first());
     sb::require(tutil::bytes_equal({ b.cast<hsc::fhsc>().first(), b.cast<hsc::fhsc>().size() }, { kBe.data, kBe.len }));
-    // the consteval side already static_assert'd exactness; this is the runtime half of the same claim
+    //  the consteval side already static_assert'd exactness; this is the runtime half of the same claim
     sb::require(tutil::bytes_equal({ b.cast<hsc::fhsc>().first(), b.cast<hsc::fhsc>().size() }, { kExactBody.data, kExactBody.len }));
   }
 

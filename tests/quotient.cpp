@@ -1,7 +1,7 @@
-// Quotient mode geometry. Guards: the Hopf projection/section pair (h(lift(p)) == p on every
-// codeword), TRUE phase invariance (quantize(e^{i psi} z) == quantize(z) across the whole
-// fiber), the canonical-representative convention (Re z0 >= 0, Im z0 == 0; south pole pins to
-// (0, 1)), scale invariance, the quotient-metric error bound, and bad-input rejection.
+//  Quotient mode geometry. Guards: the Hopf projection/section pair (h(lift(p)) == p on every
+//  codeword), TRUE phase invariance (quantize(e^{i psi} z) == quantize(z) across the whole
+//  fiber), the canonical-representative convention (Re z0 >= 0, Im z0 == 0; south pole pins to
+//  (0, 1)), scale invariance, the quotient-metric error bound, and bad-input rejection.
 
 #include "../src/hsc/codec/quotient.hpp"
 #include "../src/hsc/codec/scratch.hpp"
@@ -14,14 +14,14 @@
 namespace
 {
 
-// squared quotient distance between unit quaternions: dq^2 = 2 - 2 |<a, b>_C|
+//  squared quotient distance between unit quaternions: dq^2 = 2 - 2 |<a, b>_C|
 f64
 quotient_dist(const f32 *a, const f32 *b)
 {
   const f64 re
-      = static_cast<f64>(a[0]) * b[0] + static_cast<f64>(a[1]) * b[1] + static_cast<f64>(a[2]) * b[2] + static_cast<f64>(a[3]) * b[3];
+     = static_cast<f64>(a[0]) * b[0] + static_cast<f64>(a[1]) * b[1] + static_cast<f64>(a[2]) * b[2] + static_cast<f64>(a[3]) * b[3];
   const f64 im
-      = static_cast<f64>(a[1]) * b[0] - static_cast<f64>(a[0]) * b[1] + static_cast<f64>(a[3]) * b[2] - static_cast<f64>(a[2]) * b[3];
+     = static_cast<f64>(a[1]) * b[0] - static_cast<f64>(a[0]) * b[1] + static_cast<f64>(a[3]) * b[2] - static_cast<f64>(a[2]) * b[3];
   const f64 m = __builtin_sqrt(re * re + im * im);
   const f64 s = 2.0 - 2.0 * (m > 1.0 ? 1.0 : m);
   return __builtin_sqrt(s > 0.0 ? s : 0.0);
@@ -37,13 +37,13 @@ phase_rotate(const f32 *z, f64 psi, f32 *out)
   out[3] = static_cast<f32>(z[2] * s + z[3] * c);
 }
 
-}      // namespace
+}      //  namespace
 
 int
 main()
 {
   hsc::hopf_scratch sc;
-  sb::require(sc.build_s2(hsc::level_dq(6)) >= 0);      // d = 0.2, M = 304-class codebook family
+  sb::require(sc.build_s2(hsc::level_dq(6)) >= 0);      //  d = 0.2, M = 304-class codebook family
 
   sb::test_case("the section is a true section: h(lift(p)) == p on every S^2 codeword");
   {
@@ -52,11 +52,11 @@ main()
       hsc::s2_decode(sc.s2, a, p);
       f32 z[4];
       hsc::hopf_lift(p, z);
-      // the lift is unit
+      //  the lift is unit
       f64 n2 = 0;
       for ( i32 c = 0; c < 4; ++c ) n2 += static_cast<f64>(z[c]) * static_cast<f64>(z[c]);
       sb::require(n2 > 1.0 - 1e-6 && n2 < 1.0 + 1e-6);
-      // canonical representative: z0 real, nonnegative
+      //  canonical representative: z0 real, nonnegative
       sb::require(static_cast<f64>(z[0]) >= 0.0);
       sb::require(hsc::__f2u(z[1]) == 0u || z[1] == 0.0f);
       sb::require(hsc::hopf_project(z, back) >= 0);
@@ -65,7 +65,7 @@ main()
         const f64 e = back[c] - p[c];
         e2 += e * e;
       }
-      sb::require(__builtin_sqrt(e2) < 1e-6);      // f32 lift round-trips within f32 grain
+      sb::require(__builtin_sqrt(e2) < 1e-6);      //  f32 lift round-trips within f32 grain
     }
   }
 
@@ -133,11 +133,11 @@ main()
       f32 zh[4];
       hsc::quotient_reconstruct(sc.s2, a, zh);
       const f64 dq = quotient_dist(z, zh);
-      sb::require(dq <= d * 1.05 + 1e-6);      // measured worst ~ d; 5% slack for band corners
+      sb::require(dq <= d * 1.05 + 1e-6);      //  measured worst ~ d; 5% slack for band corners
       se += dq * dq;
       ++cnt;
     }
-    // RMS tracks ~ d/4 (the fiber halves the base metric); generous ceiling at d/2
+    //  RMS tracks ~ d/4 (the fiber halves the base metric); generous ceiling at d/2
     sb::require(__builtin_sqrt(se / cnt) < d * 0.5);
   }
 

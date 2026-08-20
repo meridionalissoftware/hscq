@@ -1,10 +1,10 @@
-// Oct mode geometry, algebra first. Guards: the Cayley-Dickson multiplication table of THIS
-// convention (storage (e1..e7, e0), split A = (o0,o1,o2,o7), B = (o4,o5,o6,o3), product
-// (A1,B1)(A2,B2) = (A1A2 - conj(B2)B1, B2A1 + B1conj(A2))), the conjugation anti-automorphism,
-// norm multiplicativity (the composition-algebra property the Hopf map depends on), the
-// projection/section pair and fixed point over the WHOLE L3 codebook, TRUE fiber invariance
-// via the exact graph-sphere parametrization (fibers are {(a, q a)} -- NOT a group orbit),
-// scale invariance, the base-chordal error bound, refine-never-worse, and bad-input rejection.
+//  Oct mode geometry, algebra first. Guards: the Cayley-Dickson multiplication table of THIS
+//  convention (storage (e1..e7, e0), split A = (o0,o1,o2,o7), B = (o4,o5,o6,o3), product
+//  (A1,B1)(A2,B2) = (A1A2 - conj(B2)B1, B2A1 + B1conj(A2))), the conjugation anti-automorphism,
+//  norm multiplicativity (the composition-algebra property the Hopf map depends on), the
+//  projection/section pair and fixed point over the WHOLE L3 codebook, TRUE fiber invariance
+//  via the exact graph-sphere parametrization (fibers are {(a, q a)} -- NOT a group orbit),
+//  scale invariance, the base-chordal error bound, refine-never-worse, and bad-input rejection.
 
 #include "../src/hsc/codec/oct.hpp"
 #include "tutil.hpp"
@@ -87,7 +87,7 @@ static hsc::tree_row g_rows[1024];
 static hsc::s3_leaf g_leaves[8192];
 static hsc::susp_band g_bands[64];
 
-}      // namespace
+}      //  namespace
 
 int
 main()

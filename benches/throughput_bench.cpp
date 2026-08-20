@@ -1,23 +1,23 @@
-// hsc throughput — the headline table: cyc/byte AND MB/s, encode next to decode, across the
-// whole (mode x dim x level x transform) grid, plus hot-vs-cold scratch, a size sweep, a
-// ragged (non-block-multiple) tail, and a sustained soak with thermal drift.
-//   duck build benches/throughput_bench.cpp --perf --fp -i ../micron -i ../micron/src && ./bin/throughput_bench
+//  hsc throughput — the headline table: cyc/byte AND MB/s, encode next to decode, across the
+//  whole (mode x dim x level x transform) grid, plus hot-vs-cold scratch, a size sweep, a
+//  ragged (non-block-multiple) tail, and a sustained soak with thermal drift.
+//    duck build benches/throughput_bench.cpp --perf --fp -i ../micron -i ../micron/src && ./bin/throughput_bench
 #include "_corpus.hpp"
 
 #include "_bench_common.hpp"
 
-// The grid is wide, so each cell runs a deliberately short measurement: bench_one still takes
-// the median of 7, it just uses fewer reps per sample than the single-cell benches do.
-static constexpr u64 k_reps = 12;      // reps per perf-counter sample
-static constexpr u64 k_treps = 6;      // reps per wall-clock sample
+//  The grid is wide, so each cell runs a deliberately short measurement: bench_one still takes
+//  the median of 7, it just uses fewer reps per sample than the single-cell benches do.
+static constexpr u64 k_reps = 12;      //  reps per perf-counter sample
+static constexpr u64 k_treps = 6;      //  reps per wall-clock sample
 
-static constexpr usize k_big = 1 << 19;      // 512 KiB, the top of the size sweep
+static constexpr usize k_big = 1 << 19;      //  512 KiB, the top of the size sweep
 static u8 g_in[k_big];
 static u8 g_z[2 << 20];
 static u8 g_out[2 << 20];
 
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// one (encode, decode) pair -> one throughput row
+//  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//  one (encode, decode) pair -> one throughput row
 
 static void
 row_bytes(const char *corpus, const char *impl, const u8 *d, usize n, const hsc::hopf_opts &o, hsc::hopf_scratch &sc) noexcept
@@ -27,7 +27,7 @@ row_bytes(const char *corpus, const char *impl, const u8 *d, usize n, const hsc:
     mb::sink_size(w);
     mb::clobber(g_z);
   };
-  enc();      // build the skeleton outside every measured loop
+  enc();      //  build the skeleton outside every measured loop
   const usize zn = hsc::hopf_into(hsc::bytes{ d, n }, o, g_z, sizeof(g_z), sc);
 
   auto dec = [&]() {
@@ -49,7 +49,7 @@ row_bytes(const char *corpus, const char *impl, const u8 *d, usize n, const hsc:
 static void
 row_floats(const char *corpus, const char *impl, const f32 *d, usize nf, const hsc::hopf_opts &o, hsc::hopf_scratch &sc) noexcept
 {
-  const usize n = nf * 4;      // bytes of input, so MB/s is comparable with the byte lanes
+  const usize n = nf * 4;      //  bytes of input, so MB/s is comparable with the byte lanes
   auto enc = [&]() {
     const max_t w = hsc::hopf_into(hsc::floats{ d, nf }, o, g_z, sizeof(g_z), sc);
     mb::sink_size(static_cast<usize>(w));
@@ -76,7 +76,7 @@ row_floats(const char *corpus, const char *impl, const f32 *d, usize nf, const h
                                rd.cyc_per_op / (f64)n, mb::mbps(n, dns), re.ipc, re.bmiss_rate, ens > 0.0 ? re.cyc_per_op / ens : 0.0 });
 }
 
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 static char g_name[64];
 
@@ -107,11 +107,11 @@ main()
   mb::pin_cpu0();
   mb::print_preamble("hsc throughput — cyc/byte and MB/s, encode and decode");
   hc::generate();
-  mb::spin_up();      // reach the turbo clock before the first wall-clock cell (see GHz column)
+  mb::spin_up();      //  reach the turbo clock before the first wall-clock cell (see GHz column)
 
   hsc::hopf_scratch sc;
 
-  // %%%% the dim x level grid, bin mode, on the two extreme corpora
+  //  %%%% the dim x level grid, bin mode, on the two extreme corpora
   micron::io::println("-- bin: dimension x level (noise = incompressible worst case, smooth = typical) --");
   mb::print_tput_header();
   for ( u32 dl = 2; dl <= 6; ++dl ) {
@@ -122,7 +122,7 @@ main()
   }
   micron::io::println("");
 
-  // %%%% the level sweep at the reference dimension
+  //  %%%% the level sweep at the reference dimension
   micron::io::println("-- bin d8: level sweep (rate knob) --");
   mb::print_tput_header();
   for ( i32 lvl : { 1, 3, 5, 6, 7, 9 } ) {
@@ -131,7 +131,7 @@ main()
   }
   micron::io::println("");
 
-  // %%%% corpus sensitivity + the H*D transform, on and off
+  //  %%%% corpus sensitivity + the H*D transform, on and off
   micron::io::println("-- bin: corpus x transform --");
   mb::print_tput_header();
   for ( usize i = 0; i < hc::corpora_count; ++i ) {
@@ -143,7 +143,7 @@ main()
   }
   micron::io::println("");
 
-  // %%%% the typed float lanes
+  //  %%%% the typed float lanes
   micron::io::println("-- float lanes: vec / unit / quotient (MB/s over INPUT bytes) --");
   mb::print_tput_header();
   {
@@ -175,7 +175,7 @@ main()
   }
   micron::io::println("");
 
-  // %%%% refine and gain_bits, which no bench has ever touched through the public API
+  //  %%%% refine and gain_bits, which no bench has ever touched through the public API
   micron::io::println("-- encoder knobs: refine, gain_bits --");
   mb::print_tput_header();
   {
@@ -191,7 +191,7 @@ main()
   }
   micron::io::println("");
 
-  // %%%% size sweep + a ragged tail (n not a multiple of the block size)
+  //  %%%% size sweep + a ragged tail (n not a multiple of the block size)
   micron::io::println("-- size sweep (1 KiB .. 512 KiB) and a ragged tail --");
   mb::print_tput_header();
   {
@@ -207,7 +207,7 @@ main()
   }
   micron::io::println("");
 
-  // %%%% cold scratch: what a caller pays who does not hold a hopf_scratch
+  //  %%%% cold scratch: what a caller pays who does not hold a hopf_scratch
   micron::io::println("-- cold scratch (skeleton rebuilt per call) vs hot --");
   mb::print_tput_header();
   {
@@ -239,7 +239,7 @@ main()
   }
   micron::io::println("");
 
-  // %%%% sustained rate + thermal droop (turbo is on and the governor is schedutil here)
+  //  %%%% sustained rate + thermal droop (turbo is on and the governor is schedutil here)
   micron::io::println("-- sustained soak: median MB/s, first vs last decile, drift --");
   mb::print_soak_header();
   {
@@ -248,19 +248,19 @@ main()
     const usize zn = hsc::hopf_into(hsc::bytes{ hc::g_noise, hc::k_n }, o, g_z, sizeof(g_z), sc);
     mb::print_soak_row("encode noise64k", "bin d8 L6",
                        mb::soak_one(
-                           [&]() {
-                             mb::sink_size(hsc::hopf_into(hsc::bytes{ hc::g_noise, hc::k_n }, o, g_z, sizeof(g_z), sc));
-                             mb::clobber(g_z);
-                           },
-                           hc::k_n, 2000));
+                          [&]() {
+                            mb::sink_size(hsc::hopf_into(hsc::bytes{ hc::g_noise, hc::k_n }, o, g_z, sizeof(g_z), sc));
+                            mb::clobber(g_z);
+                          },
+                          hc::k_n, 2000));
     mb::print_soak_row("decode noise64k", "bin d8 L6",
                        mb::soak_one(
-                           [&]() {
-                             auto w = hsc::unhopf(hsc::bytes{ g_z, zn }, hsc::wbytes{ g_out, sizeof(g_out) }, sc);
-                             mb::sink_bool(w.is_first());
-                             mb::clobber(g_out);
-                           },
-                           hc::k_n, 2000));
+                          [&]() {
+                            auto w = hsc::unhopf(hsc::bytes{ g_z, zn }, hsc::wbytes{ g_out, sizeof(g_out) }, sc);
+                            mb::sink_bool(w.is_first());
+                            mb::clobber(g_out);
+                          },
+                          hc::k_n, 2000));
   }
 
   mb::print_epilogue();

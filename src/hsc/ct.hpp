@@ -13,13 +13,13 @@
 
 #include <micron/types.hpp>
 
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// hsc::ct
+//  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//  hsc::ct
 //
-// comptime compression
+//  comptime compression
 //
-// NOTE: GCC's default -fconstexpr-ops-limit handles payloads up to a few KiB; larger comptime
-// payloads need the limits raised, see scripts/ctbuild
+//  NOTE: GCC's default -fconstexpr-ops-limit handles payloads up to a few KiB; larger comptime
+//  payloads need the limits raised, see scripts/ctbuild
 
 namespace hsc::ct
 {
@@ -95,15 +95,15 @@ require(bool ok, const char *what)
   if ( !ok ) throw what;
 }
 
-// comptime arena caps
-// fits:
-// dim4 L16 (leaves, with room)
-// dim8 L11 (leaves 37024)
-// dim16 L10 (rows 12295, nodes 1043)
-// dim32 L8
-// dim64 L8
-// quat L11 (leaves 36816)
-// oct L10 (rows 12204; L11 wants 36816 rows)
+//  comptime arena caps
+//  fits:
+//  dim4 L16 (leaves, with room)
+//  dim8 L11 (leaves 37024)
+//  dim16 L10 (rows 12295, nodes 1043)
+//  dim32 L8
+//  dim64 L8
+//  quat L11 (leaves 36816)
+//  oct L10 (rows 12204; L11 wants 36816 rows)
 inline constexpr usize k_nodes = 2048;
 inline constexpr usize k_rows = 16384;
 inline constexpr usize k_leaves = 65536;
@@ -139,7 +139,7 @@ struct views {
     sbands = new susp_band[susp_band_count(dq)];
     const max_t r = susp_build(dq, child_dim_log2, ar, sbands, ss);
     require(r >= 0, "hsc::ct: comptime arena cap exceeded (coarsen d or raise __ct caps)");
-    sk = tree_view(ar, 0, child_dim_log2, dq);      // arena view; a suspension has no single root
+    sk = tree_view(ar, 0, child_dim_log2, dq);      //  arena view; a suspension has no single root
     if ( child_dim_log2 == 3 ) {
       pt = pack_tables{ new vq_index[ar.node_count], new vq_index[ar.row_count ? ar.row_count : 1] };
       const max_t pr = pack_build(ar, pt);
@@ -231,11 +231,11 @@ decode(const u8 *sp, usize sn, u8 *outb, f32 *outf)
   return r;
 }
 
-template<typename S> inline constexpr bool is_f32_carrier = sizeof(S::data[0]) == 4;      // unevaluated
+template<typename S> inline constexpr bool is_f32_carrier = sizeof(S::data[0]) == 4;      //  unevaluated
 
-};      // namespace __ct
+};      //  namespace __ct
 
-// compress
+//  compress
 template<auto S, hopf_opts O = hopf_opts{}> consteval usize hopf_size()
 {
   const usize cap = hsc::bound(S.len, O);
@@ -267,7 +267,7 @@ template<auto S, hopf_opts O = hopf_opts{}> consteval auto hopf()
   return out;
 }
 
-// decompress
+//  decompress
 template<auto Z>
 consteval usize
 unhopf_size()
@@ -318,18 +318,18 @@ unhopf_f32()
   return out;
 }
 
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// fidelity, checked by the compiler
+//  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//  fidelity, checked by the compiler
 //
-// Both take results you already computed, so nothing is encoded twice -- pass the source carrier and
-// the decoded one. A lossy codec has no business promising exactness in the abstract; this is how you
-// prove it for the ONE payload you are baking, at the cell you are baking it at, before the build links.
+//  Both take results you already computed, so nothing is encoded twice -- pass the source carrier and
+//  the decoded one. A lossy codec has no business promising exactness in the abstract; this is how you
+//  prove it for the ONE payload you are baking, at the cell you are baking it at, before the build links.
 //
 //   inline constexpr auto k_z    = hsc::ct::hopf<k_body, hsc::opts_exact_bytes>();
 //   inline constexpr auto k_back = hsc::ct::unhopf<k_z>();
 //   static_assert(hsc::ct::exact<k_body, k_back>());
 
-// worst absolute per-byte drift, or -1 when the lengths disagree
+//  worst absolute per-byte drift, or -1 when the lengths disagree
 template<auto Src, auto Back>
 consteval i32
 max_byte_err()
@@ -449,9 +449,9 @@ s8_bits()
 {
   __ct::views v{};
   v.build_susp(3, Dq);
-  const u32 b = susp_bits(v.sp);      // arbint width: stays exact past u64
+  const u32 b = susp_bits(v.sp);      //  arbint width: stays exact past u64
   v.drop();
   return b;
 }
 
-};      // namespace hsc::ct
+};      //  namespace hsc::ct

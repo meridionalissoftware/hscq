@@ -1,7 +1,7 @@
-// LSB bit I/O: writer/reader round-trip under random field widths, strict end-of-input
-// accounting, fast-path/slow-path byte identity, and the consteval twin producing the same
-// bytes as the runtime path. Wide (>64-bit) fields are the pack layer's job and are tested in
-// pack.cpp, not here.
+//  LSB bit I/O: writer/reader round-trip under random field widths, strict end-of-input
+//  accounting, fast-path/slow-path byte identity, and the consteval twin producing the same
+//  bytes as the runtime path. Wide (>64-bit) fields are the pack layer's job and are tested in
+//  pack.cpp, not here.
 
 #include "../src/hsc/bits/bitreader.hpp"
 #include "../src/hsc/bits/bitwriter.hpp"
@@ -14,12 +14,12 @@
 namespace
 {
 
-// a fixed comptime pattern: 3+11+32+7+1 bits, written then read back in constant evaluation
+//  a fixed comptime pattern: 3+11+32+7+1 bits, written then read back in constant evaluation
 constexpr bool
 comptime_roundtrip()
 {
   u8 buf[16]{};
-  hsc::bits::bitwriter w{ .out = buf, .fast_end = buf };      // fast_end = out: force the portable path
+  hsc::bits::bitwriter w{ .out = buf, .fast_end = buf };      //  fast_end = out: force the portable path
   w.add(0b101u, 3);
   w.flush();
   w.add(0x5A3u, 11);
@@ -37,12 +37,12 @@ comptime_roundtrip()
   if ( !r.need(32) || r.bits(32) != 0xDEADBEEFu ) return false;
   if ( !r.need(7) || r.bits(7) != 0x55u ) return false;
   if ( !r.need(1) || r.bits(1) != 1u ) return false;
-  return end - buf == 7;      // 54 bits -> 7 bytes
+  return end - buf == 7;      //  54 bits -> 7 bytes
 }
 
 static_assert(comptime_roundtrip());
 
-}      // namespace
+}      //  namespace
 
 int
 main()
@@ -84,7 +84,7 @@ main()
       vals[i] = g.next() & ((1ull << widths[i]) - 1);
     }
     hsc::bits::bitwriter wf{ .out = fastb, .fast_end = fastb + sizeof(fastb) - 8 };
-    hsc::bits::bitwriter ws{ .out = slowb, .fast_end = slowb };      // never take the fast store
+    hsc::bits::bitwriter ws{ .out = slowb, .fast_end = slowb };      //  never take the fast store
     for ( usize i = 0; i < N; ++i ) {
       wf.add(vals[i], static_cast<i32>(widths[i]));
       wf.flush();
@@ -102,15 +102,15 @@ main()
     u8 buf[4]{};
     hsc::bits::bitwriter w{ .out = buf, .fast_end = buf };
     w.add(0x7u, 3);
-    const u8 *end = w.finish();      // 1 byte out, 5 pad bits
+    const u8 *end = w.finish();      //  1 byte out, 5 pad bits
     sb::require(end - buf == 1);
 
     hsc::bits::bitreader r{ .p = buf, .end = end };
     sb::require(r.need(3));
     sb::require(static_cast<u64>(r.bits(3)), 0x7ull);
-    sb::require(r.need(5));      // the pad bits are readable...
+    sb::require(r.need(5));      //  the pad bits are readable...
     sb::require(static_cast<u64>(r.bits(5)), 0ull);
-    sb::require(!r.need(1));      // ...but nothing past them
+    sb::require(!r.need(1));      //  ...but nothing past them
   }
 
   sb::test_case("finish() zero-pads the final partial byte");
@@ -128,7 +128,7 @@ main()
       const u32 pad = static_cast<u32>(8 * static_cast<u64>(end - buf) - w);
       if ( pad ) {
         sb::require(r.need(pad));
-        sb::require(static_cast<u64>(r.bits(pad)), 0ull);      // decoder relies on zero pad
+        sb::require(static_cast<u64>(r.bits(pad)), 0ull);      //  decoder relies on zero pad
       }
     }
   }
@@ -141,7 +141,7 @@ main()
       w.add(static_cast<u64>(i) & 0xFu, 4);
       w.flush();
     }
-    const u8 *end = w.finish();      // 128 bits = 16 bytes
+    const u8 *end = w.finish();      //  128 bits = 16 bytes
     sb::require(end - buf == 16);
     hsc::bits::bitreader r{ .p = buf, .end = end };
     u64 got = 0;

@@ -54,8 +54,8 @@ struct line {
     while ( *p ) buf[pos++] = *p++;
   }
 
-  // a field that already reaches (or overruns) its column still gets one separating space --
-  // otherwise a wide value runs straight into the next one ("11915.671.05").
+  //  a field that already reaches (or overruns) its column still gets one separating space --
+  //  otherwise a wide value runs straight into the next one ("11915.671.05").
   void
   pad_to(u32 end_col, u32 written) noexcept
   {
@@ -113,8 +113,8 @@ struct line {
     while ( *p ) buf[pos++] = *p++;
   }
 
-  // NOTE: a field wider than its column still gets one separating space -- without this an
-  // over-long impl name runs straight into the next number ("quantize refine1753.45").
+  //  NOTE: a field wider than its column still gets one separating space -- without this an
+  //  over-long impl name runs straight into the next number ("quantize refine1753.45").
   void
   s_lj_at(const char *p, u32 end_col) noexcept
   {
@@ -165,22 +165,22 @@ print_row(const row &r)
   micron::io::println(ln.str());
 }
 
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// throughput reporting: cyc/byte next to MB/s, encode next to decode. cyc/op alone hides the
-// absolute rate, which is the number a consumer actually budgets against.
+//  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//  throughput reporting: cyc/byte next to MB/s, encode next to decode. cyc/op alone hides the
+//  absolute rate, which is the number a consumer actually budgets against.
 
 struct tput {
   const char *corpus;
   const char *impl;
   u64 out_bytes;
-  f64 ratio;      // in / out
+  f64 ratio;      //  in / out
   f64 enc_cyc_b;
   u64 enc_mbps;
   f64 dec_cyc_b;
   u64 dec_mbps;
   f64 ipc;
   f64 bmiss_rate;
-  f64 ghz;      // cycles/ns observed during the encode cell -- MB/s is only comparable at equal clock
+  f64 ghz;      //  cycles/ns observed during the encode cell -- MB/s is only comparable at equal clock
 };
 
 [[gnu::cold]] inline void
@@ -307,9 +307,9 @@ bench_one(const char *op, const char *impl, u64 size, u64 bytes_per_op, Fn &&fn,
   };
 }
 
-// Busy-spin to pull the core up to its turbo clock before any wall-clock measurement. Without
-// this the first rows of a long table are timed at the idle frequency and their MB/s reads low
-// against identical cyc/byte -- the giveaway that a number is a clock artefact, not a speedup.
+//  Busy-spin to pull the core up to its turbo clock before any wall-clock measurement. Without
+//  this the first rows of a long table are timed at the idle frequency and their MB/s reads low
+//  against identical cyc/byte -- the giveaway that a number is a clock artefact, not a speedup.
 [[gnu::noinline]] inline void
 spin_up(u64 ms = 300) noexcept
 {
@@ -501,4 +501,4 @@ print_epilogue()
   micron::io::println("(anti-DCE sink: ", sink_u64, ")");
 }
 
-}      // namespace mb
+}      //  namespace mb

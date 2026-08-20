@@ -22,11 +22,11 @@
 #include <micron/string/strings.hpp>
 #include <micron/types.hpp>
 
-// %%%%%%%%%%%%%%%%%%%%
-// hsc compress
+//  %%%%%%%%%%%%%%%%%%%%
+//  hsc compress
 //
-// bytes in (mode bin) cannot fail:
-// options are clamped, any byte pattern quantizes, and the owned wrappers allocate the exactly known stream size
+//  bytes in (mode bin) cannot fail:
+//  options are clamped, any byte pattern quantizes, and the owned wrappers allocate the exactly known stream size
 
 namespace hsc
 {
@@ -43,7 +43,7 @@ struct enc_params {
   bool transform = false;
 };
 
-// clamp, never reject
+//  clamp, never reject
 constexpr enc_params
 resolve(const hopf_opts &o, mode m) noexcept
 {
@@ -71,7 +71,7 @@ __put64(bits::bitwriter &w, u64 v, u32 nbits) noexcept
   }
 }
 
-// header + payload + trailer
+//  header + payload + trailer
 constexpr usize
 __emit(const hopf_info &fi, u8 *buf, auto &&record) noexcept
 {
@@ -85,7 +85,7 @@ __emit(const hopf_info &fi, u8 *buf, auto &&record) noexcept
   return k_header_size + pbytes + k_trailer_size;
 }
 
-// bytes -> centered blocks
+//  bytes -> centered blocks
 constexpr usize
 bin_into(bytes in, const enc_params &p, const tree_skeleton &sk, const pack_tables &pt, u8 *buf) noexcept
 {
@@ -95,7 +95,7 @@ bin_into(bytes in, const enc_params &p, const tree_skeleton &sk, const pack_tabl
                 tree_m_mod64(sk) };
   fi.transform = p.transform;
   const gain_quant gq{ p.gain_bits, gq_bin_scale(p.dim_log2) };
-  // hoisted out of the per-block lambda
+  //  hoisted out of the per-block lambda
   vq_index a;
   pack_scratch ps;
   block_code bc;
@@ -245,7 +245,7 @@ oct_into(floats in, const enc_params &p, const susp_skeleton &ss, const tree_ske
     return fail(error::bad_length);
   hopf_info fi{ mode::oct, 4, p.dq, 0, susp_bits(sp), 0, in.size(), __nblocks(mode::oct, 4, in.size()), ss.m_mod };
   max_t bad = 0;
-  // hoisted out of the per-block lambda (the v3 arbint lesson: bounded ctors zero every limb)
+  //  hoisted out of the per-block lambda (the v3 arbint lesson: bounded ctors zero every limb)
   vq_index a;
   pack_scratch ps;
   tree_fields f;
@@ -264,26 +264,26 @@ oct_into(floats in, const enc_params &p, const susp_skeleton &ss, const tree_ske
   return static_cast<max_t>(written);
 }
 
-};      // namespace __hopf
+};      //  namespace __hopf
 
-// %%%%%%%%%%%%%%%%%%%%%%%
-// bound
+//  %%%%%%%%%%%%%%%%%%%%%%%
+//  bound
 
 constexpr u32
 __shape_bits_ub(u32 dim_log2, u32 dq) noexcept
 {
   const u32 n = 1u << dim_log2;
   u32 lg = 1;
-  while ( (dq_max >> lg) > dq ) ++lg;      // ceil(log2(2 / d_eff)) + 1 envelope
+  while ( (dq_max >> lg) > dq ) ++lg;      //  ceil(log2(2 / d_eff)) + 1 envelope
   return (n - 1) * (lg + 1) + n;
 }
 
-// suspension envelope for the quat/oct bases
-// M <= T * max_band M_child, every band child snaps up (d_child >= d)
-// M_child(band) <= M_child(d).  for d <= sqrt(2): T <= pi/(2 asin(d/2)) + 3 <= 8/d = 4 * (2/d)
-// (the middle inequality fails on d in (~1.843, 2), but there the band window w = pi - 2*dth is
-// already negative and T collapses to the 2 poles, well under the envelope);
-// hence bits <= (lg + 2) + child bits; generous overestimate on purpose
+//  suspension envelope for the quat/oct bases
+//  M <= T * max_band M_child, every band child snaps up (d_child >= d)
+//  M_child(band) <= M_child(d).  for d <= sqrt(2): T <= pi/(2 asin(d/2)) + 3 <= 8/d = 4 * (2/d)
+//  (the middle inequality fails on d in (~1.843, 2), but there the band window w = pi - 2*dth is
+//  already negative and T collapses to the 2 poles, well under the envelope);
+//  hence bits <= (lg + 2) + child bits; generous overestimate on purpose
 constexpr u32
 __susp_bits_ub(u32 child_dim_log2, u32 dq) noexcept
 {
@@ -328,8 +328,8 @@ bound(usize n_elems, const hopf_opts &o, hopf_scratch &sc)
   return k_header_size + __payload_bytes(fi) + k_trailer_size;
 }
 
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// compress
+//  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//  compress
 
 inline usize
 hopf_into(bytes in, const hopf_opts &o, u8 *buf, usize cap, hopf_scratch &sc) noexcept
@@ -407,7 +407,7 @@ hopf_str(const C &in, const hopf_opts &o = {})
 inline max_t
 hopf_into(floats in, const hopf_opts &o, u8 *buf, usize cap, hopf_scratch &sc) noexcept
 {
-  const mode m = o.m == mode::bin ? mode::vec : o.m;      // floats never run the byte mode
+  const mode m = o.m == mode::bin ? mode::vec : o.m;      //  floats never run the byte mode
   const __hopf::enc_params p = __hopf::resolve(o, m);
   if ( p.m == mode::quotient ) {
     if ( sc.build_s2(p.dq) < 0 ) [[unlikely]]
@@ -474,4 +474,4 @@ hopf(const C &in, const hopf_opts &o = {}) noexcept
   return hopf(as_floats(in), o);
 }
 
-};      // namespace hsc
+};      //  namespace hsc

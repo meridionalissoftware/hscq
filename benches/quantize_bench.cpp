@@ -1,7 +1,7 @@
-// hsc quantizer kernels — cycles per block for the raw typed layer: s3 against tree depth,
-// refine on/off, and the arbint rank/unrank isolated from the geometry.
-//   duck build benches/quantize_bench.cpp --perf --fp -i ../micron -i ../micron/src && ./bin/quantize_bench
-// NOTE the include order: hsc before bbench (__bitwise macro, see hopf_bench.cpp).
+//  hsc quantizer kernels — cycles per block for the raw typed layer: s3 against tree depth,
+//  refine on/off, and the arbint rank/unrank isolated from the geometry.
+//    duck build benches/quantize_bench.cpp --perf --fp -i ../micron -i ../micron/src && ./bin/quantize_bench
+//  NOTE the include order: hsc before bbench (__bitwise macro, see hopf_bench.cpp).
 #include "_corpus.hpp"
 
 #include "_bench_common.hpp"
@@ -25,48 +25,48 @@ main()
     usize bi = 0;
 
     mb::row rq = mb::bench_one(
-        nm, "quantize L6", 1, 1,
-        [&]() {
-          hsc::tree_fields f{};
-          hsc::tree_quantize(sc.sk, blocks[bi++ & 1023], f);
-          mb::sink_size(f.leaf[0] + static_cast<usize>(f.base[0]));
-        },
-        1 << 14);
+       nm, "quantize L6", 1, 1,
+       [&]() {
+         hsc::tree_fields f{};
+         hsc::tree_quantize(sc.sk, blocks[bi++ & 1023], f);
+         mb::sink_size(f.leaf[0] + static_cast<usize>(f.base[0]));
+       },
+       1 << 14);
     mb::print_row(rq);
 
     mb::row rr = mb::bench_one(
-        nm, "quantize refine", 1, 1,
-        [&]() {
-          hsc::tree_fields f{};
-          hsc::tree_quantize(sc.sk, blocks[bi++ & 1023], f, 1);
-          mb::sink_size(f.leaf[0] + static_cast<usize>(f.base[0]));
-        },
-        1 << 14);
+       nm, "quantize refine", 1, 1,
+       [&]() {
+         hsc::tree_fields f{};
+         hsc::tree_quantize(sc.sk, blocks[bi++ & 1023], f, 1);
+         mb::sink_size(f.leaf[0] + static_cast<usize>(f.base[0]));
+       },
+       1 << 14);
     mb::print_row(rr);
 
     hsc::tree_fields f0{};
     hsc::tree_quantize(sc.sk, blocks[0], f0);
     mb::row rk = mb::bench_one(
-        nm, "rank+unrank", 1, 1,
-        [&]() {
-          hsc::vq_index a(0u);
-          hsc::pack_rank(sc.sk, sc.pt, f0, a);
-          hsc::tree_fields f{};
-          (void)hsc::pack_unrank(sc.sk, sc.pt, a, f);
-          mb::sink_size(static_cast<usize>(f.base[0]));
-        },
-        1 << 14);
+       nm, "rank+unrank", 1, 1,
+       [&]() {
+         hsc::vq_index a(0u);
+         hsc::pack_rank(sc.sk, sc.pt, f0, a);
+         hsc::tree_fields f{};
+         (void)hsc::pack_unrank(sc.sk, sc.pt, a, f);
+         mb::sink_size(static_cast<usize>(f.base[0]));
+       },
+       1 << 14);
     mb::print_row(rk);
 
     mb::row rd = mb::bench_one(
-        nm, "decode", 1, 1,
-        [&]() {
-          f64 p[64];
-          hsc::tree_decode(sc.sk, f0, p);
-          mb::sink_size(static_cast<usize>(p[0] * 0 + 1));
-          mb::clobber(p);
-        },
-        1 << 14);
+       nm, "decode", 1, 1,
+       [&]() {
+         f64 p[64];
+         hsc::tree_decode(sc.sk, f0, p);
+         mb::sink_size(static_cast<usize>(p[0] * 0 + 1));
+         mb::clobber(p);
+       },
+       1 << 14);
     mb::print_row(rd);
   }
 

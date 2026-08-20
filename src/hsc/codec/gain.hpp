@@ -10,19 +10,19 @@
 
 #include <micron/types.hpp>
 
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// scalar gain quantizer
+//  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//  scalar gain quantizer
 //
-// q = round(g / step), step = scale / (2^bits - 1); q == 0 decodes to exact 0.0.
-// q == 0 is NOT unreachable: any block with 0 < g < step/2 rounds to it (the gain cliff --
-// see quant.hpp's gain_range); non-positive/NaN gain and zero scale also encode to 0
+//  q = round(g / step), step = scale / (2^bits - 1); q == 0 decodes to exact 0.0.
+//  q == 0 is NOT unreachable: any block with 0 < g < step/2 rounds to it (the gain cliff --
+//  see quant.hpp's gain_range); non-positive/NaN gain and zero scale also encode to 0
 
 namespace hsc
 {
 
 struct gain_quant {
-  u32 bits = 8;       // field width, 1..24
-  f32 scale = 0;      // full-scale gain (the f32-rounded canonical value)
+  u32 bits = 8;       //  field width, 1..24
+  f32 scale = 0;      //  full-scale gain (the f32-rounded canonical value)
 };
 
 constexpr u32
@@ -57,4 +57,4 @@ gq_bin_scale(u32 dim_log2) noexcept
   return static_cast<f32>(127.5 * __sqrt(n));
 }
 
-};      // namespace hsc
+};      //  namespace hsc

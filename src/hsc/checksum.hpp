@@ -11,10 +11,10 @@
 #include <micron/hash/checksum.hpp>
 #include <micron/types.hpp>
 
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 //  ..crc32   payload trailer
 //  ..xxh32   header check byte
-// kernels live in micron; these are forwards
+//  kernels live in micron; these are forwards
 
 namespace hsc
 {
@@ -31,4 +31,4 @@ xxh32(bytes data, u32 seed = 0) noexcept
   return micron::hashes::xxhash32(data.ptr, data.size(), seed);
 }
 
-};      // namespace hsc
+};      //  namespace hsc

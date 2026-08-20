@@ -1,9 +1,9 @@
-// 09_pose.cpp
-// See also:
-//   examples/05_modes.cpp  — all six modes side by side, including quat/oct rate tables
+//  09_pose.cpp
+//  See also:
+//    examples/05_modes.cpp  — all six modes side by side, including quat/oct rate tables
 //
-// Build (from the repo root):
-//   duck batch examples.duck && ./bin/09_pose
+//  Build (from the repo root):
+//    duck batch examples.duck && ./bin/09_pose
 
 #include "_ex_common.hpp"
 
@@ -37,7 +37,7 @@ unit_quat(f64 *q)
   for ( u32 k = 0; k < 4; ++k ) q[k] /= n;
 }
 
-// rotation angle between two unit quaternions, in degrees (double cover folded by |dot|)
+//  rotation angle between two unit quaternions, in degrees (double cover folded by |dot|)
 f64
 angle_deg(const f64 *a, const f64 *b)
 {
@@ -48,14 +48,14 @@ angle_deg(const f64 *a, const f64 *b)
   return 2.0 * micron::acos(d) * 180.0 / hsc::k_pi;
 }
 
-}      // namespace
+}      //  namespace
 
 int
 main()
 {
   hsc::hopf_scratch sc;
 
-  // the stream: r[b] is the signal (a relative orientation), g[b] the per-record gauge
+  //  the stream: r[b] is the signal (a relative orientation), g[b] the per-record gauge
   static f64 g_r[k_blocks][4];
   static f64 g_g[k_blocks][4];
   mc::vector<f32> src;
@@ -64,7 +64,7 @@ main()
     unit_quat(g_r[b]);
     unit_quat(g_g[b]);
     f64 x[4];
-    hsc::quat_mul(g_r[b], g_g[b], x);      // q0 = r * g, q1 = g  ->  q0 * conj(q1) = r
+    hsc::quat_mul(g_r[b], g_g[b], x);      //  q0 = r * g, q1 = g  ->  q0 * conj(q1) = r
     for ( u32 k = 0; k < 4; ++k ) src.push_back(static_cast<f32>(x[k]));
     for ( u32 k = 0; k < 4; ++k ) src.push_back(static_cast<f32>(g_g[b][k]));
   }
@@ -91,7 +91,7 @@ main()
 
   ex::head("gauge invariance: re-gauge the whole stream, get the identical bytes");
   {
-    // replace every record's gauge with a fresh one; the physics did not change
+    //  replace every record's gauge with a fresh one; the physics did not change
     mc::vector<f32> regauged;
     regauged.reserve(k_blocks * 8 + 1);
     for ( usize b = 0; b < k_blocks; ++b ) {
@@ -122,7 +122,7 @@ main()
         x[k] = static_cast<f64>(back[b * 8 + k]);
         y[k] = static_cast<f64>(back[b * 8 + 4 + k]);
       }
-      // decoded relative rotation, renormalized (the pair is the canonical representative)
+      //  decoded relative rotation, renormalized (the pair is the canonical representative)
       hsc::quat_conj(y, yc);
       hsc::quat_mul(x, yc, rr);
       f64 n = micron::math::fsqrt(hsc::__fma_norm2(rr, 4));
@@ -130,7 +130,7 @@ main()
       const f64 er = angle_deg(g_r[b], rr);
       rel_sum += er;
       if ( er > rel_max ) rel_max = er;
-      // the decoded q0 against the original q0 = r * g: the gauge is gone, so this is large
+      //  the decoded q0 against the original q0 = r * g: the gauge is gone, so this is large
       f64 x0[4];
       hsc::quat_mul(g_r[b], g_g[b], x0);
       f64 nx = micron::math::fsqrt(hsc::__fma_norm2(x, 4));

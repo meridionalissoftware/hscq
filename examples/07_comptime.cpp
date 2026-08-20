@@ -1,14 +1,14 @@
-// 07_comptime.cpp
-// See also:
-//   examples/01_quickstart.cpp — the runtime surface
-//   tests/comptime.cpp         — the proof this example is standing on
+//  07_comptime.cpp
+//  See also:
+//    examples/01_quickstart.cpp — the runtime surface
+//    tests/comptime.cpp         — the proof this example is standing on
 //
-// The whole codec is constexpr. hsc::ct runs encode and decode inside constant evaluation, with
-// transient arenas instead of the runtime scratch, and tests/comptime.cpp proves the consteval
-// stream BYTE-IDENTICAL to the runtime one in both directions.
+//  The whole codec is constexpr. hsc::ct runs encode and decode inside constant evaluation, with
+//  transient arenas instead of the runtime scratch, and tests/comptime.cpp proves the consteval
+//  stream BYTE-IDENTICAL to the runtime one in both directions.
 //
-// Build (from the repo root):
-//   duck batch examples.duck && ./bin/07_comptime
+//  Build (from the repo root):
+//    duck batch examples.duck && ./bin/07_comptime
 
 #include "_ex_common.hpp"
 
@@ -17,17 +17,17 @@
 namespace
 {
 
-// a) bytes, baked
-// hsc::ct::str is the NTTP carrier: the payload has to be a structural template argument, because
-// the codec runs in the type system
+//  a) bytes, baked
+//  hsc::ct::str is the NTTP carrier: the payload has to be a structural template argument, because
+//  the codec runs in the type system
 inline constexpr hsc::ct::str k_body{ "the quick brown fox jumps over the lazy dog, hopfed at compile time and unhopfed "
                                       "again, so that the stream is long enough for the 48-byte frame to stop dominating "
                                       "the ratio -- at 67 bytes the container costs more than the payload saves, which is "
                                       "worth seeing once before you compress anything small." };
-// dim 4 / L13: the cell the corpus sweep measures bit-exact (BENCHMARKS.md prints psnr 99.99, which
-// is the bench's clamp for rmse < 1e-9 -- an integer rmse is either 0 or >= 1/sqrt(n), so it means
-// exact). Level is the axis that buys fidelity; dim is not -- kappa(dim) ~= 0.29*sqrt(dim), so a
-// WIDER block is less accurate at the same d, and hsc::ct's fixed arenas cap dim8 at L11 anyway.
+//  dim 4 / L13: the cell the corpus sweep measures bit-exact (BENCHMARKS.md prints psnr 99.99, which
+//  is the bench's clamp for rmse < 1e-9 -- an integer rmse is either 0 or >= 1/sqrt(n), so it means
+//  exact). Level is the axis that buys fidelity; dim is not -- kappa(dim) ~= 0.29*sqrt(dim), so a
+//  WIDER block is less accurate at the same d, and hsc::ct's fixed arenas cap dim8 at L11 anyway.
 inline constexpr hsc::hopf_opts k_opts = hsc::opts_exact_bytes;
 inline constexpr auto k_z = hsc::ct::hopf<k_body, k_opts>();
 inline constexpr auto k_back = hsc::ct::unhopf<k_z>();
@@ -36,15 +36,15 @@ static_assert(k_z.len > hsc::k_header_size + hsc::k_trailer_size);
 static_assert(k_z.len <= hsc::bound(k_body.len, k_opts));
 static_assert(k_back.len == k_body.len);
 
-// checked at compile time, so a build in which the text came back altered never links. exact_bytes()
-// is the library's claim about the CELL -- what the corpus sweep measured -- and ct::exact is the
-// proof for THIS payload, which is the one that matters: SCHF is packing, not covering, so the cell
-// being measured exact is an envelope, not a guarantee about arbitrary bytes.
+//  checked at compile time, so a build in which the text came back altered never links. exact_bytes()
+//  is the library's claim about the CELL -- what the corpus sweep measured -- and ct::exact is the
+//  proof for THIS payload, which is the one that matters: SCHF is packing, not covering, so the cell
+//  being measured exact is an envelope, not a guarantee about arbitrary bytes.
 static_assert(hsc::exact_bytes(k_opts));
 static_assert(hsc::ct::max_byte_err<k_body, k_back>() == 0);
 static_assert(hsc::ct::exact<k_body, k_back>());
 
-// b) floats, baked
+//  b) floats, baked
 inline constexpr auto k_vec = []() {
   hsc::ct::f32s<32> f{};
   for ( usize i = 0; i < 32; ++i ) f.data[i] = static_cast<f32>(static_cast<f64>(i % 7) * 0.25 - 0.75);
@@ -57,19 +57,19 @@ inline constexpr auto k_vback = hsc::ct::unhopf_f32<k_vz>();
 
 static_assert(k_vback.len == 32);
 
-// c) the skeleton, probed at compile time
-// every stream-defining integer comes out of d_q, and the compiler can derive it. These are the
-// golden cardinalities tests/s3.cpp pins the runtime kernels against.
+//  c) the skeleton, probed at compile time
+//  every stream-defining integer comes out of d_q, and the compiler can derive it. These are the
+//  golden cardinalities tests/s3.cpp pins the runtime kernels against.
 static_assert(hsc::ct::s3_m<hsc::level_dq(3)>() == 138);
 static_assert(hsc::ct::s3_m<hsc::level_dq(6)>() == 2588);
 static_assert(hsc::ct::tree_m_mod<3, hsc::level_dq(3)>() == 2310);
 
-};      // namespace
+};      //  namespace
 
 int
 main()
 {
-  // a) it is all already in the binary
+  //  a) it is all already in the binary
   ex::head("baked at compile time");
 
   mc::echo("source  = ", k_body.len, " bytes");
@@ -89,9 +89,9 @@ main()
   mc::echo("\"");
   mc::echo("(byte for byte the source string: hsc::ct::exact<> above proved it at compile time)");
 
-  // b) and the runtime agrees, byte for byte
-  // this is the contract tests/comptime.cpp asserts across the whole matrix; here it is once,
-  // visibly, so the claim is not just a comment
+  //  b) and the runtime agrees, byte for byte
+  //  this is the contract tests/comptime.cpp asserts across the whole matrix; here it is once,
+  //  visibly, so the claim is not just a comment
   ex::head("consteval == runtime");
 
   mc::vector<u8> src;
@@ -107,7 +107,7 @@ main()
   mc::echo("comptime stream = ", k_z.len, " bytes");
   mc::echo("byte-identical  : ", same ? "yes" : "NO -- the determinism contract is broken");
 
-  // c) the float lane, and the same check through the bit patterns
+  //  c) the float lane, and the same check through the bit patterns
   ex::head("floats");
 
   mc::vector<f32> fsrc;
@@ -128,7 +128,7 @@ main()
     }
   }
 
-  // d) skeleton cardinalities, straight out of the type system
+  //  d) skeleton cardinalities, straight out of the type system
   ex::head("skeleton probes");
 
   mc::echo("M(S^3) at L3 = ", hsc::ct::s3_m<hsc::level_dq(3)>());

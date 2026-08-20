@@ -1,17 +1,17 @@
-// 03_budget.cpp
-// See also:
-//   examples/02_tensor.cpp      — the plan, field by field
-//   examples/04_embeddings.cpp  — spending a budget on a real retrieval task
+//  03_budget.cpp
+//  See also:
+//    examples/02_tensor.cpp      — the plan, field by field
+//    examples/04_embeddings.cpp  — spending a budget on a real retrieval task
 //
-// hsc is fixed rate, which changes the question you get to ask. With an entropy coder you compress
-// and then find out what you got. Here the size is a closed-form function of (mode, dim, d_q,
-// gain_bits) and the shape -- so the useful question is not "what ratio did I get?" but "what does
-// this quality target cost?", and it is answerable before the data exists
+//  hsc is fixed rate, which changes the question you get to ask. With an entropy coder you compress
+//  and then find out what you got. Here the size is a closed-form function of (mode, dim, d_q,
+//  gain_bits) and the shape -- so the useful question is not "what ratio did I get?" but "what does
+//  this quality target cost?", and it is answerable before the data exists
 //
-// Nothing in this example runs the codec. Not one float is compressed.
+//  Nothing in this example runs the codec. Not one float is compressed.
 //
-// Build (from the repo root):
-//   duck batch examples.duck && ./bin/03_budget
+//  Build (from the repo root):
+//    duck batch examples.duck && ./bin/03_budget
 
 #include "_ex_common.hpp"
 
@@ -21,11 +21,11 @@ int
 main()
 {
   hsc::hopf_scratch sc;
-  const usize rows = 4096, cols = 384;      // a plausible embedding table, never allocated
+  const usize rows = 4096, cols = 384;      //  a plausible embedding table, never allocated
 
-  // a) preset ladder
-  // named cells to pick from instead of solving for. bits_per_weight here is the exact per-block
-  // accounting, pinned against hsc::rate() by tests/quant.cpp so it cannot drift into a lie.
+  //  a) preset ladder
+  //  named cells to pick from instead of solving for. bits_per_weight here is the exact per-block
+  //  accounting, pinned against hsc::rate() by tests/quant.cpp so it cannot drift into a lie.
   ex::head("presets");
 
   mc::echo("name        dim   L    bits/w   est rel-rmse   vs fp32");
@@ -44,8 +44,8 @@ main()
   mc::echo("the ladder walks the DIM axis at L5/L6/L7: dimension gain buys more than a finer");
   mc::echo("distance costs, which is why every entry is on the (rate, error) frontier.");
 
-  // b) pick one off the table
-  // no skeleton build, no search, no allocation -- just the constexpr ladder
+  //  b) pick one off the table
+  //  no skeleton build, no search, no allocation -- just the constexpr ladder
   ex::head("pick");
 
   for ( f64 budget : { 1.0, 1.5, 2.5, 3.5, 8.0 } ) {
@@ -55,9 +55,9 @@ main()
     mc::echo(" bits/weight -> ", q ? q->name : "nothing fits (even q_min is dearer)");
   }
 
-  // c) the exact accounting for a real shape
-  // pick()'s number is the per-block rate; plan_for() adds this tensor's row padding and framing,
-  // so it is the number that shows up on disk. They differ, and the difference is not hidden.
+  //  c) the exact accounting for a real shape
+  //  pick()'s number is the per-block rate; plan_for() adds this tensor's row padding and framing,
+  //  so it is the number that shows up on disk. They differ, and the difference is not hidden.
   ex::head("plan vs preset");
 
   mc::echo("preset      preset b/w   planned b/w   bytes for ", rows, "x", cols);
@@ -65,7 +65,7 @@ main()
     const hsc::qpreset &qp = hsc::q_presets[i];
     hsc::target tg = hsc::as_target(qp);
     tg.min_dim_log2 = 2;
-    tg.max_dim_log2 = 6;      // the ladder names dim 64; the solver's default window stops at 32
+    tg.max_dim_log2 = 6;      //  the ladder names dim 64; the solver's default window stops at 32
     const auto pr = hsc::plan_for(rows, cols, tg, sc);
     ex::pad(qp.name, 12);
     if ( !pr.is_first() ) {
@@ -78,8 +78,8 @@ main()
     mc::echo(p.bytes);
   }
 
-  // d) the trade-off surface
-  // dim buys rate, level buys accuracy; the solver walks this grid so you do not have to
+  //  d) the trade-off surface
+  //  dim buys rate, level buys accuracy; the solver walks this grid so you do not have to
   ex::head("the dim x level grid");
 
   mc::echo("        L4      L5      L6      L7        (bits/weight)");
@@ -100,7 +100,7 @@ main()
     mc::echo("");
   }
 
-  // e) budgets and goals, solved
+  //  e) budgets and goals, solved
   ex::head("solve");
 
   for ( f64 budget : { 1.2, 2.0, 3.0, 4.5 } ) {
@@ -144,7 +144,7 @@ main()
     mc::echo(" bits/weight");
   }
 
-  // f) the cell that is not compression
+  //  f) the cell that is not compression
   ex::head("the cell that lies");
 
   hsc::target deg{};

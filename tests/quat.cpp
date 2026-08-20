@@ -1,9 +1,9 @@
-// Quat mode geometry. Guards: the quaternionic Hopf projection/section pair (h(lift(p)) == p
-// on every S^4 codeword), TRUE fiber invariance (quantize((q0 g, q1 g)) == quantize((q0, q1))
-// for unit quaternions g -- simultaneous RIGHT multiplication), the canonical-representative
-// convention (q0 = (0,0,0,c), c >= 0; south pole pins to (0, identity)), scale invariance,
-// the quotient-metric error bound, refine-never-worse, and bad-input rejection.
-// Components are VECTOR-FIRST, scalar last: q = (x, y, z, w).
+//  Quat mode geometry. Guards: the quaternionic Hopf projection/section pair (h(lift(p)) == p
+//  on every S^4 codeword), TRUE fiber invariance (quantize((q0 g, q1 g)) == quantize((q0, q1))
+//  for unit quaternions g -- simultaneous RIGHT multiplication), the canonical-representative
+//  convention (q0 = (0,0,0,c), c >= 0; south pole pins to (0, identity)), scale invariance,
+//  the quotient-metric error bound, refine-never-worse, and bad-input rejection.
+//  Components are VECTOR-FIRST, scalar last: q = (x, y, z, w).
 
 #include "../src/hsc/codec/quat.hpp"
 #include "tutil.hpp"
@@ -69,7 +69,7 @@ static hsc::tree_row g_rows[1024];
 static hsc::s3_leaf g_leaves[8192];
 static hsc::susp_band g_bands[64];
 
-}      // namespace
+}      //  namespace
 
 int
 main()

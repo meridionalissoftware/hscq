@@ -4,8 +4,8 @@
 //  See accompanying file LICENSE or copy at
 //  https://opensource.org/license/mit
 
-// Shared hsc test utilities: whole-file slurp, byte-range views, and the deterministic RNG
-// every test uses so failures reproduce exactly.
+//  Shared hsc test utilities: whole-file slurp, byte-range views, and the deterministic RNG
+//  every test uses so failures reproduce exactly.
 #pragma once
 
 #include <micron/linux/io.hpp>
@@ -64,7 +64,7 @@ bytes_equal(micron::raw_slice<const u8> a, micron::raw_slice<const u8> b)
   return true;
 }
 
-// fixed-seed xorshift64: deterministic across runs and platforms, so failures reproduce exactly
+//  fixed-seed xorshift64: deterministic across runs and platforms, so failures reproduce exactly
 struct rng {
   u64 s = 0x9E3779B97F4A7C15ull;
 
@@ -83,7 +83,7 @@ struct rng {
     return next() % n;
   }
 
-  // uniform-ish f64 in [-1, 1]
+  //  uniform-ish f64 in [-1, 1]
   constexpr f64
   unit() noexcept
   {
@@ -91,4 +91,4 @@ struct rng {
   }
 };
 
-};      // namespace tutil
+};      //  namespace tutil

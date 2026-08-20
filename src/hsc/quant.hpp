@@ -19,8 +19,8 @@
 #include <micron/types.hpp>
 #include <micron/vector/vector.hpp>
 
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// model and vector quantization
+//  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//  model and vector quantization
 //
 //  hsc::tensor t = hsc::tensor::of(weights, 384);              // [n, 384] row-major f32
 //  auto z = hsc::quantize(t, { .bits_per_weight = 3.0 });      // result<qstream> (pack() is the result<fhsc> entry)
@@ -78,12 +78,12 @@ struct tensor {
   }
 };
 
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// fitted distortion law
+//  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//  fitted distortion law
 //
-// rmse ~= min(kappa(dim) * d * sigma, sqrt(2) * sigma)
+//  rmse ~= min(kappa(dim) * d * sigma, sqrt(2) * sigma)
 
-inline constexpr f64 k_no_info = 1.4142135623730951;      // sqrt(2): err and signal uncorrelated
+inline constexpr f64 k_no_info = 1.4142135623730951;      //  sqrt(2): err and signal uncorrelated
 
 constexpr f64
 kappa(u32 dim_log2) noexcept
@@ -115,21 +115,21 @@ est_rmse(u32 dim_log2, f64 d, f64 sigma) noexcept
   return est_rel_rmse(dim_log2, d) * sigma;
 }
 
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// stock presets
+//  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//  stock presets
 //
-// NOTE: the ladder picks one cell per dim (plus q_balanced) and is Pareto within each dim column,
-// NOT over the whole dim x {L5,L6,L7} grid: dim8 L7 (4.625 b/w, est 0.081) strictly dominates
-// q_finest and dim16 L7 (3.75 b/w, est 0.115) matches q_fine's rate at lower estimated error --
-// reach those cells through plan_for()/target, not the ladder
+//  NOTE: the ladder picks one cell per dim (plus q_balanced) and is Pareto within each dim column,
+//  NOT over the whole dim x {L5,L6,L7} grid: dim8 L7 (4.625 b/w, est 0.081) strictly dominates
+//  q_finest and dim16 L7 (3.75 b/w, est 0.115) matches q_fine's rate at lower estimated error --
+//  reach those cells through plan_for()/target, not the ladder
 
 struct qpreset {
   const char *name = nullptr;
   u32 dim_log2 = 3;
   i32 level = 6;
   u32 gain_bits = 8;
-  f64 bits_per_weight = 0;      // exact rate() accounting, framing excluded
-  f64 est_rel_rmse = 0;         // the fitted law at this cell
+  f64 bits_per_weight = 0;      //  exact rate() accounting, framing excluded
+  f64 est_rel_rmse = 0;         //  the fitted law at this cell
 };
 
 constexpr f64
@@ -163,9 +163,9 @@ static_assert(q_presets[3].est_rel_rmse > q_presets[4].est_rel_rmse);
 static_assert(q_presets[4].est_rel_rmse > q_presets[5].est_rel_rmse);
 static_assert(q_presets[5].est_rel_rmse > q_presets[6].est_rel_rmse);
 
-// NOTE: compares the preset's FRAMING-EXCLUDED rate (qpreset::bits_per_weight) against the budget;
-// plan_for() enforces the framing-INCLUDED qplan::bits_per_weight, so a plan built from pick(b)'s
-// answer can exceed b by the frame share (see examples/03_budget.cpp)
+//  NOTE: compares the preset's FRAMING-EXCLUDED rate (qpreset::bits_per_weight) against the budget;
+//  plan_for() enforces the framing-INCLUDED qplan::bits_per_weight, so a plan built from pick(b)'s
+//  answer can exceed b by the frame share (see examples/03_budget.cpp)
 constexpr const qpreset *
 pick(f64 bits_per_weight) noexcept
 {
@@ -175,24 +175,24 @@ pick(f64 bits_per_weight) noexcept
   return best;
 }
 
-// WARNING: C++ unlike C requires designated initializers in declaration order with no way to override it,
-// therefore we laid out in order of most to least important
+//  WARNING: C++ unlike C requires designated initializers in declaration order with no way to override it,
+//  therefore we laid out in order of most to least important
 struct target {
-  mode m = mode::vec;      // vec, or unit when a row is exactly one block
-  i32 level = 0;           // explicit 1..16 (0 = resolve)
-  u32 dim_log2 = 0;        // explicit 2..6  (0 = resolve)
-  u32 gain_bits = 8;       // per-block gain field, 1..24; vec only
+  mode m = mode::vec;      //  vec, or unit when a row is exactly one block
+  i32 level = 0;           //  explicit 1..16 (0 = resolve)
+  u32 dim_log2 = 0;        //  explicit 2..6  (0 = resolve)
+  u32 gain_bits = 8;       //  per-block gain field, 1..24; vec only
 
-  f64 bits_per_weight = 0;      // hard budget: the artifact must not exceed it (0 = unset)
-  f64 rel_rmse = 0;             // quality goal against est_rel_rmse
+  f64 bits_per_weight = 0;      //  hard budget: the artifact must not exceed it (0 = unset)
+  f64 rel_rmse = 0;             //  quality goal against est_rel_rmse
   u32 min_dim_log2 = 2;
   u32 max_dim_log2 = 5;
 
-  usize chunk_rows = 0;               // container only; 0 = auto (framing <= 0.5% of payload)
-  bool chunked = false;               // false: one bare hsc stream. true: an HSCQ container.
-  bool transform = false;             // H*D pre-rotation: for one-hot / spiky rows (codec/rot.hpp)
-  bool row_aligned = true;            // no block straddles a row; required for row access
-  bool allow_degenerate = false;      // let shape_bits == 0 through (it is not compression)
+  usize chunk_rows = 0;               //  container only; 0 = auto (framing <= 0.5% of payload)
+  bool chunked = false;               //  false: one bare hsc stream. true: an HSCQ container.
+  bool transform = false;             //  H*D pre-rotation: for one-hot / spiky rows (codec/rot.hpp)
+  bool row_aligned = true;            //  no block straddles a row; required for row access
+  bool allow_degenerate = false;      //  let shape_bits == 0 through (it is not compression)
 };
 
 constexpr target
@@ -217,23 +217,23 @@ struct qplan {
   bool degenerate = false;
 
   usize rows = 0, cols = 0;
-  usize blocks_per_row = 0;      // row_aligned: ceil(cols/dim). 0 when flat.
-  usize padded_cols = 0;         // blocks_per_row * dim; == cols when nothing is padded
-  u64 blocks = 0;                // over the whole tensor, padding included
+  usize blocks_per_row = 0;      //  row_aligned: ceil(cols/dim). 0 when flat.
+  usize padded_cols = 0;         //  blocks_per_row * dim; == cols when nothing is padded
+  u64 blocks = 0;                //  over the whole tensor, padding included
 
-  usize chunk_rows = 0;      // == rows when not chunked
+  usize chunk_rows = 0;      //  == rows when not chunked
   usize chunks = 1;
-  usize chunk_bytes = 0;           // one full chunk's hsc stream
-  usize last_chunk_bytes = 0;      // the final chunk holds the remaining rows
+  usize chunk_bytes = 0;           //  one full chunk's hsc stream
+  usize last_chunk_bytes = 0;      //  the final chunk holds the remaining rows
 
-  u32 shape_bits = 0;       // ceil(log2 M)
-  u32 record_bits = 0;      // gain_bits + shape_bits: the constant per-block width
+  u32 shape_bits = 0;       //  ceil(log2 M)
+  u32 record_bits = 0;      //  gain_bits + shape_bits: the constant per-block width
 
   usize bytes = 0;
   f64 bits_per_weight = 0;
   f64 payload_bits_per_weight = 0;
-  f64 ratio = 0;             // 4 * rows * cols / bytes
-  f64 est_rel_rmse = 0;      // the fitted law, not a bound
+  f64 ratio = 0;             //  4 * rows * cols / bytes
+  f64 est_rel_rmse = 0;      //  the fitted law, not a bound
 };
 
 constexpr hopf_opts
@@ -244,10 +244,10 @@ opts_of(const qplan &p) noexcept
   };
 }
 
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// HSCQ container
+//  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//  HSCQ container
 //
-// offset   width  field
+//  offset   width  field
 //   0       4   magic 0x51534889 ("\x89HSQ" on disk; the codec's is "\x89HSC")
 //   4       1   version = 1
 //   5       1   flags
@@ -360,7 +360,7 @@ default_preset(usize cols) noexcept
   return q_finest;
 }
 
-};      // namespace __quant
+};      //  namespace __quant
 
 inline result<qplan>
 plan_for(usize rows, usize cols, const target &t, hopf_scratch &sc)
@@ -491,13 +491,13 @@ qbound(const qplan &p) noexcept
   return p.bytes;
 }
 
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// encoding
+//  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//  encoding
 
 namespace __quant
 {
 
-// rows [row0, row0+nrows) of x
+//  rows [row0, row0+nrows) of x
 inline max_t
 encode_chunk(const tensor &x, const qplan &p, usize row0, usize nrows, u8 *buf, usize cap, hopf_scratch &sc, micron::vector<f32> &stage)
 {
@@ -562,7 +562,7 @@ write_all(const tensor &x, const qplan &p, wbytes out, hopf_scratch &sc)
   return off;
 }
 
-};      // namespace __quant
+};      //  namespace __quant
 
 struct qstream {
   fhsc z{};
@@ -703,7 +703,7 @@ decode_chunk(bytes z, const qplan &p, usize nrows, f32 *out, hopf_scratch &sc, m
   return static_cast<max_t>(nrows * p.cols);
 }
 
-// rows [first, first+count)
+//  rows [first, first+count)
 inline max_t
 decode_rows(bytes z, const qplan &p, usize first, usize count, f32 *out, hopf_scratch &sc, micron::vector<f32> &stage)
 {
@@ -730,7 +730,7 @@ decode_rows(bytes z, const qplan &p, usize first, usize count, f32 *out, hopf_sc
   return static_cast<max_t>(count * p.cols);
 }
 
-};      // namespace __quant
+};      //  namespace __quant
 
 inline result<usize>
 dequantize(bytes z, const qplan &p, wfloats out, hopf_scratch &sc)
@@ -758,7 +758,7 @@ dequantize(bytes z, const qplan &p)
   return out;
 }
 
-// rows [first, first+count) of a bare stream
+//  rows [first, first+count) of a bare stream
 inline result<usize>
 dequantize_rows(bytes z, const qplan &p, usize first, usize count, wfloats out, hopf_scratch &sc)
 {
@@ -828,7 +828,7 @@ qprobe(bytes blob)
   if ( qi.rows == 0 || qi.cols == 0 || qi.chunk_rows == 0 || qi.chunk_rows > qi.rows ) [[unlikely]]
     return error::bad_container;
   if ( !qi.row_aligned ) [[unlikely]]
-    return error::bad_container;      // a chunk boundary must fall on a block boundary
+    return error::bad_container;      //  a chunk boundary must fall on a block boundary
   qi.chunks = (qi.rows + qi.chunk_rows - 1) / qi.chunk_rows;
 
   const u8 *h0 = blob.ptr + k_qhead_size;
@@ -877,7 +877,7 @@ qprobe(bytes blob)
     return error::bad_length;
   p.dq = fi.d_q;
   p.transform = fi.transform;
-  p.level = 0;      // a stream carries d_q, not the preset it came from
+  p.level = 0;      //  a stream carries d_q, not the preset it came from
   const f64 elems = static_cast<f64>(qi.rows) * static_cast<f64>(qi.cols);
   p.payload_bits_per_weight = static_cast<f64>(p.blocks) * static_cast<f64>(rb) / elems;
   p.bits_per_weight = static_cast<f64>(p.bytes) * 8.0 / elems;
@@ -897,7 +897,7 @@ chunk_at(bytes blob, const qplan &p, usize c) noexcept
   return bytes{ blob.ptr + off, n };
 }
 
-};      // namespace __quant
+};      //  namespace __quant
 
 inline result<usize>
 unpack(bytes blob, wfloats out, hopf_scratch &sc)
@@ -935,7 +935,7 @@ unpack(bytes blob)
   return out;
 }
 
-// rows [first, first+count) of a container
+//  rows [first, first+count) of a container
 inline result<usize>
 unpack_rows(bytes blob, usize first, usize count, wfloats out, hopf_scratch &sc)
 {
@@ -1021,7 +1021,7 @@ struct qreader {
       usize take = chunk_rows_here - in_chunk;
       if ( take > count - done ) take = count - done;
       const max_t r
-          = __quant::decode_rows(__quant::chunk_at(__blob, __i.p, c), __i.p, in_chunk, take, out.ptr + done * __i.cols, *__sc, __stage);
+         = __quant::decode_rows(__quant::chunk_at(__blob, __i.p, c), __i.p, in_chunk, take, out.ptr + done * __i.cols, *__sc, __stage);
       if ( r < 0 ) [[unlikely]]
         return as_error(r);
       done += take;
@@ -1036,12 +1036,12 @@ struct qreader {
   }
 };
 
-// rel_rmse = ||err|| / ||ref||     cos = <ref,got> / (||ref|| ||got||)
+//  rel_rmse = ||err|| / ||ref||     cos = <ref,got> / (||ref|| ||got||)
 struct qerror {
   f64 rmse = 0;
   f64 rel_rmse = 0;
   f64 cos = 0;
-  f64 psnr_db = 0;      // against the peak magnitude of ref
+  f64 psnr_db = 0;      //  against the peak magnitude of ref
   usize elems = 0;
 };
 
@@ -1076,8 +1076,8 @@ measure(const tensor &ref, floats got) noexcept
   return measure(ref.v, got);
 }
 
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// dynamic range
+//  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//  dynamic range
 //  ..ratio <<  2^gain_bits     one stream is fine
 //  ..ratio ~=  2^gain_bits     quiet blocks are losing gain resolution
 //  ..ratio >   2^(gain_bits+1) quiet blocks are being nulled (gq_encode rounds g/step < 0.5 to
@@ -1085,10 +1085,10 @@ measure(const tensor &ref, floats got) noexcept
 
 struct grange {
   f64 max_norm = 0;
-  f64 min_norm = 0;      // smallest nonull block norm
-  f64 ratio = 0;         // max_norm / min_norm; 0 when there is nothing to compare
+  f64 min_norm = 0;      //  smallest nonull block norm
+  f64 ratio = 0;         //  max_norm / min_norm; 0 when there is nothing to compare
   u64 blocks = 0;
-  u64 empty = 0;      // blocks that were all zeros to begin with
+  u64 empty = 0;      //  blocks that were all zeros to begin with
   u64 zeroed = 0;
 };
 
@@ -1136,4 +1136,4 @@ gain_range(const tensor &x, const qplan &p) noexcept
   return gain_range(x, p.dim_log2, p.gain_bits);
 }
 
-};      // namespace hsc
+};      //  namespace hsc

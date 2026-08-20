@@ -1,10 +1,10 @@
-// The cap-anchored suspension quantizer behind modes quat (S^4 over S^3 children) and oct
-// (S^8 over S^7 children). Guards: golden cardinalities against the Python mirror
-// (scripts/compression_ratio_model.py), full index bijection sweeps on the u64 lane,
-// brute-force minimum pairwise distance on whole codebooks (both bases), exact pole
-// codewords, off-sphere clamp robustness, poles-only collapse at coarse d, and the
-// refine-never-worse guarantee. The Hopf projections/lifts feeding this quantizer are
-// tested in quat.cpp / oct.cpp, not here.
+//  The cap-anchored suspension quantizer behind modes quat (S^4 over S^3 children) and oct
+//  (S^8 over S^7 children). Guards: golden cardinalities against the Python mirror
+//  (scripts/compression_ratio_model.py), full index bijection sweeps on the u64 lane,
+//  brute-force minimum pairwise distance on whole codebooks (both bases), exact pole
+//  codewords, off-sphere clamp robustness, poles-only collapse at coarse d, and the
+//  refine-never-worse guarantee. The Hopf projections/lifts feeding this quantizer are
+//  tested in quat.cpp / oct.cpp, not here.
 
 #include "../src/hsc/sphere/susp.hpp"
 #include "tutil.hpp"
@@ -29,23 +29,23 @@ ct_m(u32 child_dl, u32 dq)
   return ss.m_mod;
 }
 
-// golden cardinalities from the validated Python mirror, at the exact wire d_q values
-// (equator-anchored layout: interior band count forced odd)
-static_assert(ct_m(2, hsc::level_dq(1)) == 18);            // S^4, d = 0.9 (1 equator band + 2 poles)
-static_assert(ct_m(2, hsc::level_dq(2)) == 86);            // S^4, d = 0.7
-static_assert(ct_m(2, hsc::level_dq(3)) == 332);           // S^4, d = 0.5
-static_assert(ct_m(2, hsc::level_dq(5)) == 2978);          // S^4, d = 0.3
-static_assert(ct_m(2, hsc::level_dq(6)) == 16720);         // S^4, d = 0.2
-static_assert(ct_m(3, hsc::level_dq(3)) == 4552);          // S^8, d = 0.5
-static_assert(ct_m(3, hsc::level_dq(5)) == 356950);        // S^8, d = 0.3
-static_assert(ct_m(3, hsc::level_dq(6)) == 10923842);      // S^8, d = 0.2
-// the d = 2 floor and everything past d = sqrt(2) collapse to the two poles -- M = 2, never 1:
-// the quotient family cannot go degenerate (record_bits >= 1 at every valid d_q)
+//  golden cardinalities from the validated Python mirror, at the exact wire d_q values
+//  (equator-anchored layout: interior band count forced odd)
+static_assert(ct_m(2, hsc::level_dq(1)) == 18);            //  S^4, d = 0.9 (1 equator band + 2 poles)
+static_assert(ct_m(2, hsc::level_dq(2)) == 86);            //  S^4, d = 0.7
+static_assert(ct_m(2, hsc::level_dq(3)) == 332);           //  S^4, d = 0.5
+static_assert(ct_m(2, hsc::level_dq(5)) == 2978);          //  S^4, d = 0.3
+static_assert(ct_m(2, hsc::level_dq(6)) == 16720);         //  S^4, d = 0.2
+static_assert(ct_m(3, hsc::level_dq(3)) == 4552);          //  S^8, d = 0.5
+static_assert(ct_m(3, hsc::level_dq(5)) == 356950);        //  S^8, d = 0.3
+static_assert(ct_m(3, hsc::level_dq(6)) == 10923842);      //  S^8, d = 0.2
+//  the d = 2 floor and everything past d = sqrt(2) collapse to the two poles -- M = 2, never 1:
+//  the quotient family cannot go degenerate (record_bits >= 1 at every valid d_q)
 static_assert(ct_m(2, hsc::dq_max) == 2);
 static_assert(ct_m(3, hsc::dq_max) == 2);
 static_assert(ct_m(2, hsc::dq_of(1.5)) == 2);
 static_assert(ct_m(3, hsc::dq_of(1.5)) == 2);
-// band-count cap: worst case at the validity floor dq_min
+//  band-count cap: worst case at the validity floor dq_min
 static_assert(hsc::susp_band_count(hsc::dq_min) == 31411);
 static_assert(hsc::susp_band_count(hsc::dq_min) <= hsc::susp_max_bands);
 
@@ -56,7 +56,7 @@ static hsc::susp_band g_bands[64];
 
 struct built {
   hsc::tree_arena ar;
-  hsc::tree_skeleton tv;      // arena view; root is meaningless for a suspension
+  hsc::tree_skeleton tv;      //  arena view; root is meaningless for a suspension
   hsc::susp_skeleton ss;
 };
 
@@ -80,7 +80,7 @@ fields_equal(const hsc::tree_fields &a, const hsc::tree_fields &b, u32 dim_log2)
   return true;
 }
 
-// a random point on S^n as (vector, height): sum of uniforms per coordinate, normalized
+//  a random point on S^n as (vector, height): sum of uniforms per coordinate, normalized
 void
 random_point(tutil::rng &g, u32 n, f64 *p)
 {
@@ -94,7 +94,7 @@ random_point(tutil::rng &g, u32 n, f64 *p)
   for ( u32 c = 0; c <= n; ++c ) p[c] *= inv;
 }
 
-}      // namespace
+}      //  namespace
 
 int
 main()
@@ -133,7 +133,7 @@ main()
         ++seen;
         continue;
       }
-      // a dim-8 child is one internal node over two dim-4 children per row
+      //  a dim-8 child is one internal node over two dim-4 children per row
       const hsc::tree_skeleton cv = hsc::susp_child_view(b.ss, b.tv, band);
       const hsc::tree_node &nd = cv.nodes[cv.root];
       for ( u32 x = 0; x < nd.count; ++x ) {
@@ -156,12 +156,12 @@ main()
           }
       }
     }
-    sb::require(seen, 4552ull);      // every codeword reached exactly once
+    sb::require(seen, 4552ull);      //  every codeword reached exactly once
   }
 
   sb::test_case("brute-force minimum pairwise distance >= d on whole codebooks, both bases");
   {
-    // S^4 at L2/L3/L5 (M = 86 / 332 / 2978)
+    //  S^4 at L2/L3/L5 (M = 86 / 332 / 2978)
     static f64 pts4[2978][5];
     for ( i32 lvl : { 2, 3, 5 } ) {
       const built b = build(2, lvl);
@@ -183,7 +183,7 @@ main()
         }
       sb::require(__builtin_sqrt(dmin2) >= b.ss.d - 1e-9);
     }
-    // S^8 at L3 (M = 4552), enumerated per band
+    //  S^8 at L3 (M = 4552), enumerated per band
     static f64 pts8[4552][9];
     {
       const built b = build(3, 3);
@@ -239,7 +239,7 @@ main()
       for ( i32 k = 0; k < 5; ++k ) n2 += p[k] * p[k];
       sb::require(n2 > 1.0 - 1e-12 && n2 < 1.0 + 1e-12);
     }
-    // the poles decode bit-exactly -- the [x:0]/[0:y] classes are why the layout is cap-anchored
+    //  the poles decode bit-exactly -- the [x:0]/[0:y] classes are why the layout is cap-anchored
     f64 pn[5]{}, ps[5]{};
     hsc::tree_fields f{};
     hsc::susp_decode(b.ss, b.tv, 0, f, pn);
@@ -250,7 +250,7 @@ main()
     }
     sb::require(pn[4] == 1.0);
     sb::require(ps[4] == -1.0);
-    // and quantize deterministically from any whisker direction
+    //  and quantize deterministically from any whisker direction
     for ( i32 t = 0; t < 16; ++t ) {
       f64 p[5] = { 0, 0, 0, 0, 1.0 };
       p[t % 4] = 1e-9;
@@ -269,7 +269,7 @@ main()
     const f64 under[5] = { 0.0, 0.0, 0.0, 0.0, -1.5 };
     sb::require(hsc::susp_quantize(b.ss, b.tv, over, f), 0u);
     sb::require(hsc::susp_quantize(b.ss, b.tv, under, f), b.ss.count - 1);
-    // exactly at the pole/interior midpoint and the interior grid edges: any valid band, stable
+    //  exactly at the pole/interior midpoint and the interior grid edges: any valid band, stable
     for ( const f64 th : { 0.5 * b.ss.th_first, b.ss.th_first, b.ss.th_last, 0.5 * (b.ss.th_last + hsc::k_pi) } ) {
       f64 st = 0, ct = 0;
       micron::sincos(th, st, ct);

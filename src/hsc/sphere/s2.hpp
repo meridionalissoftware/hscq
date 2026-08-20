@@ -14,30 +14,30 @@
 #include <micron/math/simd/atrig.hpp>
 #include <micron/types.hpp>
 
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// S^2 quantizer for quotient mode
+//  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//  S^2 quantizer for quotient mode
 //
-// colatitude theta in [0, pi] slices into T = floor(pi/Dth) + 1 bands separated by Dth = 2 asin(d/2), placed symmetrically about the
-// equator
+//  colatitude theta in [0, pi] slices into T = floor(pi/Dth) + 1 bands separated by Dth = 2 asin(d/2), placed symmetrically about the
+//  equator
 //
-// f64 + u64 only, buffer must be provided
+//  f64 + u64 only, buffer must be provided
 
 namespace hsc
 {
 
 struct s2_band {
-  f64 st = 0;       // sin(theta_b): band circle radius
-  f64 ct = 0;       // cos(theta_b): band height
-  u32 m = 0;        // points on the band
-  u64 off = 0;      // cumulative codeword offset
+  f64 st = 0;       //  sin(theta_b): band circle radius
+  f64 ct = 0;       //  cos(theta_b): band height
+  u32 m = 0;        //  points on the band
+  u64 off = 0;      //  cumulative codeword offset
 };
 
 struct s2_skeleton {
   const s2_band *bd = nullptr;
   u32 count = 0;
   f64 d = 0;
-  f64 dth = 0;      // 2 asin(d/2)
-  f64 th0 = 0;      // first band colatitude: (pi - (T-1) Dth) / 2
+  f64 dth = 0;      //  2 asin(d/2)
+  f64 th0 = 0;      //  first band colatitude: (pi - (T-1) Dth) / 2
   u64 m_total = 0;
 };
 
@@ -49,7 +49,7 @@ s2_band_count(u32 dq) noexcept
   return static_cast<u32>(micron::math::mkbits::round_ns::floor<f64>(k_pi / dth)) + 1;
 }
 
-// worst case over valid streams (dq_min = 1678) is T = 31411 bands; 7 of slack
+//  worst case over valid streams (dq_min = 1678) is T = 31411 bands; 7 of slack
 inline constexpr u32 s2_max_bands = 31418;
 
 constexpr s2_skeleton
@@ -114,9 +114,9 @@ s2_quantize(const s2_skeleton &sk, const f64 *p) noexcept
   b = b < 0 ? 0 : (b >= static_cast<i64>(sk.count) ? static_cast<i64>(sk.count) - 1 : b);
   const s2_band &bd = sk.bd[b];
   const f64 ph = micron::math::mk::atan2_bl(p[1], p[0]);
-  const f64 phi = ph < 0.0 ? f64(ph + k_2pi) : ph;      // select, not a coin-flip branch
+  const f64 phi = ph < 0.0 ? f64(ph + k_2pi) : ph;      //  select, not a coin-flip branch
   const i64 j = static_cast<i64>(__round(phi * static_cast<f64>(bd.m) / k_2pi)) % static_cast<i64>(bd.m);
   return bd.off + static_cast<u64>(j);
 }
 
-};      // namespace hsc
+};      //  namespace hsc

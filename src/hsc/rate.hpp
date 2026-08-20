@@ -46,7 +46,7 @@ rate(const hopf_opts &o, hopf_scratch &sc) noexcept
     const max_t r = sc.build_susp(p.m == mode::quat ? 2 : 3, p.dq);
     if ( r < 0 ) [[unlikely]]
       return as_error(r);
-    // quat may read m_mod as exact: max quat M = 2^58.065 at dq_min (< 2^64; see susp.hpp:28,39)
+    //  quat may read m_mod as exact: max quat M = 2^58.065 at dq_min (< 2^64; see susp.hpp:28,39)
     ri.shape_bits = p.m == mode::quat ? static_cast<u32>(micron::bit_width(sc.ss.m_mod - 1)) : susp_bits(sc.sp);
   } else {
     const max_t r = sc.build_tree(p.dim_log2, p.dq);
@@ -58,8 +58,8 @@ rate(const hopf_opts &o, hopf_scratch &sc) noexcept
   ri.block_elems = static_cast<u32>(__block_elems(p.m, p.dim_log2));
   ri.bits_per_elem = static_cast<f64>(ri.record_bits) / static_cast<f64>(ri.block_elems);
   ri.bits_per_input_byte = p.m == mode::bin ? ri.bits_per_elem : ri.bits_per_elem * 0.25;
-  // frame-FREE asymptote (record bits only); ratio_of() below is the framed number and differs
-  // for small inputs by the 48-byte header+trailer share
+  //  frame-FREE asymptote (record bits only); ratio_of() below is the framed number and differs
+  //  for small inputs by the 48-byte header+trailer share
   ri.ratio = ri.bits_per_input_byte > 0.0 ? 8.0 / ri.bits_per_input_byte : 0.0;
   return ri;
 }
@@ -70,8 +70,8 @@ input_bytes(usize n_elems, const hopf_opts &o) noexcept
   return o.m == mode::bin ? n_elems : n_elems * 4;
 }
 
-// framed ratio: input bytes over bound() INCLUDING the 40+8-byte frame (rate_info.ratio is the
-// frame-free asymptote)
+//  framed ratio: input bytes over bound() INCLUDING the 40+8-byte frame (rate_info.ratio is the
+//  frame-free asymptote)
 inline f64
 ratio_of(usize n_elems, const hopf_opts &o, hopf_scratch &sc) noexcept
 {
@@ -86,4 +86,4 @@ degenerate(const hopf_opts &o, hopf_scratch &sc) noexcept
   return r.is_first() ? r.cast<rate_info>().shape_bits == 0 : false;
 }
 
-};      // namespace hsc
+};      //  namespace hsc

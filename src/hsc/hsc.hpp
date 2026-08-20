@@ -6,12 +6,12 @@
 
 #pragma once
 
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// hsc/q
-// (Hopf spherical compression / quantization)
-// header-only, (micron corelib)
-// fixed-rate lossy VQ on spherical codes by Hopf foliations (Miyamoto/Costa/Sa Earp, IEEE T-IT 2021):
-// recursive S^(2n-1) decomposition to the 4D base case, no stored codebook, native comptime mode
+//  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//  hsc/q
+//  (Hopf spherical compression / quantization)
+//  header-only, (micron corelib)
+//  fixed-rate lossy VQ on spherical codes by Hopf foliations (Miyamoto/Costa/Sa Earp, IEEE T-IT 2021):
+//  recursive S^(2n-1) decomposition to the 4D base case, no stored codebook, native comptime mode
 
 #include "checksum.hpp"
 #include "config.hpp"
@@ -21,7 +21,7 @@
 #include "bits/bitreader.hpp"
 #include "bits/bitwriter.hpp"
 
-// sphere math
+//  sphere math
 #include "sphere/s2.hpp"
 #include "sphere/s3.hpp"
 #include "sphere/susp.hpp"
@@ -36,15 +36,15 @@
 #include "codec/rot.hpp"
 #include "codec/scratch.hpp"
 
-// container and verbs
+//  container and verbs
 #include "format.hpp"
 #include "hopf.hpp"
 #include "unhopf.hpp"
 
-// fixed-rate size/ratio query (needs resolve + bound from hopf.hpp)
+//  fixed-rate size/ratio query (needs resolve + bound from hopf.hpp)
 #include "rate.hpp"
 
-// porcelain: tensors, bits/weight targets, the preset ladder, the HSCQ container
+//  porcelain: tensors, bits/weight targets, the preset ladder, the HSCQ container
 #include "quant.hpp"
 
 #include "ct.hpp"

@@ -1,19 +1,19 @@
-// 05_modes.cpp
-// See also:
-//   examples/04_embeddings.cpp  — the lane you actually want for a table of vectors
-//   examples/06_transform.cpp   — the pre-rotation, for data that sits on the axes
-//   examples/09_pose.cpp        — the quat lane end to end, on gauge-carrying orientation data
+//  05_modes.cpp
+//  See also:
+//    examples/04_embeddings.cpp  — the lane you actually want for a table of vectors
+//    examples/06_transform.cpp   — the pre-rotation, for data that sits on the axes
+//    examples/09_pose.cpp        — the quat lane end to end, on gauge-carrying orientation data
 //
-// hsc has six input modes and they are not interchangeable
-//   bin       arbitrary bytes, centered on 127.5, shape + gain
-//   vec       f32 blocks, shape + gain               <- the lane for weights and embeddings
-//   unit      f32 blocks PROMISED unit-norm: no gain field at all
-//   quotient  4-float complex pairs up to a global phase, through the Hopf map onto S^2
-//   quat      8-float quaternion pairs up to the S^3 fiber, onto S^4 (vector-first, scalar-last)
-//   oct       16-float octonion pairs up to the S^7 fiber, onto S^8
+//  hsc has six input modes and they are not interchangeable
+//    bin       arbitrary bytes, centered on 127.5, shape + gain
+//    vec       f32 blocks, shape + gain               <- the lane for weights and embeddings
+//    unit      f32 blocks PROMISED unit-norm: no gain field at all
+//    quotient  4-float complex pairs up to a global phase, through the Hopf map onto S^2
+//    quat      8-float quaternion pairs up to the S^3 fiber, onto S^4 (vector-first, scalar-last)
+//    oct       16-float octonion pairs up to the S^7 fiber, onto S^8
 //
-// Build (from the repo root):
-//   duck batch examples.duck && ./bin/05_modes
+//  Build (from the repo root):
+//    duck batch examples.duck && ./bin/05_modes
 
 #include "_ex_common.hpp"
 
@@ -25,7 +25,7 @@ namespace
 constexpr usize k_rows = 128;
 constexpr usize k_cols = 64;
 
-};      // namespace
+};      //  namespace
 
 int
 main()
@@ -34,8 +34,8 @@ main()
   mc::vector<f32> w = ex::weights(k_rows, k_cols);
   hsc::tensor t = hsc::tensor::of(w, k_cols);
 
-  // a) vec: the lane for tensors
-  // every block carries its own gain, so a row keeps its internal shape as well as its direction
+  //  a) vec: the lane for tensors
+  //  every block carries its own gain, so a row keeps its internal shape as well as its direction
   ex::head("vec");
 
   auto v = hsc::quantize(t, { .level = 6, .dim_log2 = 3 }, sc);
@@ -53,15 +53,15 @@ main()
   ex::line3("bits/w  = ", vq.p.bits_per_weight);
   ex::line3("rel rmse= ", ve.rel_rmse);
 
-  // b) unit
+  //  b) unit
   ex::head("unit");
 
   mc::echo("cols = ", k_cols, ", dim = 8, so a row is 8 blocks, not one");
   auto bad = hsc::plan_for(t, { .m = hsc::mode::unit, .level = 6, .dim_log2 = 3 }, sc);
   mc::echo("porcelain says: ", bad.is_first() ? "accepted" : hsc::error_name(bad.cast<hsc::error>()));
 
-  // the raw verb will do it anyway, because the plumbing does not know these were rows
-  // here is what it costs: every block comes back at norm 1, so the row's profile is flattened
+  //  the raw verb will do it anyway, because the plumbing does not know these were rows
+  //  here is what it costs: every block comes back at norm 1, so the row's profile is flattened
   auto raw = hsc::hopf(hsc::floats{ w.begin(), w.size() }, hsc::hopf_opts{ .m = hsc::mode::unit, .level = 6, .dim_log2 = 3 }, sc);
   if ( raw.is_first() ) {
     mc::vector<f32> ub;
@@ -78,7 +78,7 @@ main()
     }
   }
 
-  // and where unit is right: a table whose row is exactly one block, already normalized
+  //  and where unit is right: a table whose row is exactly one block, already normalized
   mc::echo("");
   mc::vector<f32> e8 = ex::embeddings(256, 8);
   hsc::tensor t8 = hsc::tensor::of(e8, 8);
@@ -91,7 +91,7 @@ main()
     if ( cmp.is_first() ) ex::line3("vec lane  = ", cmp.cast<hsc::qplan>().bits_per_weight, " bits/weight, for the same data");
   }
 
-  // c) quotient: a symmetry, quotiented
+  //  c) quotient: a symmetry, quotiented
   ex::head("quotient");
 
   mc::vector<f32> u4 = ex::embeddings(512, 4);
@@ -122,7 +122,7 @@ main()
   auto refused = hsc::plan_for(t, { .m = hsc::mode::quotient }, sc);
   mc::echo("quotient on a weight matrix: ", refused.is_first() ? "accepted" : hsc::error_name(refused.cast<hsc::error>()));
 
-  // d) quat: the quaternionic sibling
+  //  d) quat: the quaternionic sibling
   ex::head("quat");
 
   {
@@ -140,7 +140,7 @@ main()
     qp.reserve(8 * 64 + 1);
     for ( usize i = 0; i < 8 * 64; ++i ) qp.push_back(static_cast<f32>(micron::sin(static_cast<f64>(i) * 0.71) + 1.1));
     auto z1 = hsc::hopf(hsc::floats{ qp.begin(), qp.size() }, q8o, sc);
-    f64 g[4] = { 0.5, -0.5, 0.5, 0.5 };      // a unit quaternion
+    f64 g[4] = { 0.5, -0.5, 0.5, 0.5 };      //  a unit quaternion
     mc::vector<f32> qr;
     qr.reserve(qp.size() + 1);
     for ( usize b = 0; b < qp.size() / 8; ++b ) {
@@ -166,7 +166,7 @@ main()
     mc::echo("quat on a weight matrix: ", refq.is_first() ? "accepted" : hsc::error_name(refq.cast<hsc::error>()));
   }
 
-  // e) oct: the octonionic sibling
+  //  e) oct: the octonionic sibling
   ex::head("oct");
 
   {
@@ -184,8 +184,8 @@ main()
     mc::echo("oct on a weight matrix: ", refo.is_first() ? "accepted" : hsc::error_name(refo.cast<hsc::error>()));
   }
 
-  // f) bin: bytes, and the one lane the porcelain does not wrap
-  // hopf() on bytes cannot fail and needs no plan
+  //  f) bin: bytes, and the one lane the porcelain does not wrap
+  //  hopf() on bytes cannot fail and needs no plan
   ex::head("bin");
 
   mc::vector<u8> raw8;

@@ -1,5 +1,5 @@
-// Rate-distortion table: bits/byte and RMSE per (mode, dim, level) cell on the synthetic corpora,
-// including the quat/oct fiber-saving columns. hsc before _bench_common.hpp (see hopf_bench.cpp).
+//  Rate-distortion table: bits/byte and RMSE per (mode, dim, level) cell on the synthetic corpora,
+//  including the quat/oct fiber-saving columns. hsc before _bench_common.hpp (see hopf_bench.cpp).
 #include "_corpus.hpp"
 
 #include "_bench_common.hpp"

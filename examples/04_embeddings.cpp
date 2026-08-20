@@ -1,11 +1,11 @@
-// 04_embeddings.cpp
-// See also:
-//   examples/02_tensor.cpp   — the plan, field by field
-//   examples/03_budget.cpp   — what a rate costs before you spend it
-//   examples/05_modes.cpp    — why `unit` is the WRONG lane for a 384-wide row
+//  04_embeddings.cpp
+//  See also:
+//    examples/02_tensor.cpp   — the plan, field by field
+//    examples/03_budget.cpp   — what a rate costs before you spend it
+//    examples/05_modes.cpp    — why `unit` is the WRONG lane for a 384-wide row
 //
-// Build (from the repo root):
-//   duck batch examples.duck && ./bin/04_embeddings
+//  Build (from the repo root):
+//    duck batch examples.duck && ./bin/04_embeddings
 
 #include "_ex_common.hpp"
 
@@ -18,7 +18,7 @@ constexpr usize k_rows = 2000;
 constexpr usize k_cols = 384;
 constexpr usize k_topk = 10;
 
-// exhaustive cosine top-k. Rows are unit-norm, so cosine is a dot product
+//  exhaustive cosine top-k. Rows are unit-norm, so cosine is a dot product
 void
 topk(const f32 *table, usize rows, usize cols, const f32 *query, usize *out, usize k)
 {
@@ -40,7 +40,7 @@ topk(const f32 *table, usize rows, usize cols, const f32 *query, usize *out, usi
   }
 }
 
-};      // namespace
+};      //  namespace
 
 int
 main()
@@ -52,9 +52,9 @@ main()
   hsc::tensor t = hsc::tensor::of(table, k_cols);
   hsc::hopf_scratch sc;
 
-  // a) pack the table
-  // an HSCQ blob is self-describing: rows, cols and chunking in 32 bytes, then ordinary hsc
-  // streams. Nothing else has to be stored beside it
+  //  a) pack the table
+  //  an HSCQ blob is self-describing: rows, cols and chunking in 32 bytes, then ordinary hsc
+  //  streams. Nothing else has to be stored beside it
   ex::head("pack");
 
   auto pk = hsc::pack(t, { .bits_per_weight = 3.0 }, sc);
@@ -78,8 +78,8 @@ main()
   mc::echo("dim         = ", 1u << info.p.dim_log2, "  record = ", info.p.record_bits, " bits/block");
   ex::line3("framing     = ", static_cast<f64>(info.chunks * 48) * 100.0 / static_cast<f64>(blob.size()), "% of the blob");
 
-  // b) read one vector without touching the rest
-  // returned floats are bit-identical to what a whole table decode would yield for that row
+  //  b) read one vector without touching the rest
+  //  returned floats are bit-identical to what a whole table decode would yield for that row
   ex::head("random access");
 
   hsc::qreader rd{ bv, sc };
@@ -99,7 +99,7 @@ main()
     mc::echo("");
   }
 
-  // c) the whole table back, and what it cost
+  //  c) the whole table back, and what it cost
   ex::head("quality");
 
   mc::vector<f32> back;
@@ -111,7 +111,7 @@ main()
   ex::line3("cosine   = ", e.cos);
   ex::line3("psnr     = ", e.psnr_db, " dB");
 
-  // d) chunking against one big stream
+  //  d) chunking against one big stream
   ex::head("why chunks");
 
   const hsc::grange gr = hsc::gain_range(t, info.p);
@@ -128,9 +128,9 @@ main()
     if ( hsc::dequantize(f, hsc::wfloats{ fb.begin(), fb.size() }, sc).is_first() ) {
       const usize q0 = 40 * k_cols;
       const hsc::qerror fq
-          = hsc::measure(hsc::floats{ table.begin() + q0, t.elems() - q0 }, hsc::floats{ fb.begin() + q0, t.elems() - q0 });
+         = hsc::measure(hsc::floats{ table.begin() + q0, t.elems() - q0 }, hsc::floats{ fb.begin() + q0, t.elems() - q0 });
       const hsc::qerror cq
-          = hsc::measure(hsc::floats{ table.begin() + q0, t.elems() - q0 }, hsc::floats{ back.begin() + q0, t.elems() - q0 });
+         = hsc::measure(hsc::floats{ table.begin() + q0, t.elems() - q0 }, hsc::floats{ back.begin() + q0, t.elems() - q0 });
       mc::echo("");
       mc::echo("one stream : ", f.size(), " bytes");
       ex::line3("             quiet-row rel rmse ", fq.rel_rmse, "   <- 1.000 means they went to ZERO");
@@ -146,7 +146,7 @@ main()
     }
   }
 
-  // e) does retrieval survive?
+  //  e) does retrieval survive?
   ex::head("recall@10");
 
   usize hits = 0, total = 0;

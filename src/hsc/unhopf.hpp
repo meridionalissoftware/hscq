@@ -20,8 +20,8 @@
 #include <micron/bits.hpp>
 #include <micron/types.hpp>
 
-// %%%%%%%%%%%%%%%%%%%%
-// hsc decompress
+//  %%%%%%%%%%%%%%%%%%%%
+//  hsc decompress
 
 namespace hsc
 {
@@ -158,7 +158,7 @@ __walk_quat(bytes payload, const hopf_info &fi, const susp_skeleton &ss, const t
     u64 a = 0;
     if ( !__get64(r, fi.bits_per_block, a) ) [[unlikely]]
       return fail(error::bad_stream);
-    if ( a >= ss.m_mod ) [[unlikely]]      // exact radix check: the S^4 suspension M fits u64
+    if ( a >= ss.m_mod ) [[unlikely]]      //  exact radix check: the S^4 suspension M fits u64
       return fail(error::bad_stream);
     quat_reconstruct(ss, tv, a, dst);
     return 0;
@@ -169,7 +169,7 @@ constexpr max_t
 __walk_oct(bytes payload, const hopf_info &fi, const susp_skeleton &ss, const tree_skeleton &tv, const pack_tables &pt, const susp_pack &sp,
            u64 first, u64 count, bool verify_tail, f32 *out) noexcept
 {
-  // hoisted out of the per-record lambda (bounded arbint ctors zero every limb)
+  //  hoisted out of the per-record lambda (bounded arbint ctors zero every limb)
   vq_index a;
   pack_scratch ps;
   tree_fields f;
@@ -177,7 +177,7 @@ __walk_oct(bytes payload, const hopf_info &fi, const susp_skeleton &ss, const tr
     if ( !get_wide(r, fi.bits_per_block, a) ) [[unlikely]]
       return fail(error::bad_stream);
     u32 band = 0;
-    const max_t ur = susp_unrank(ss, tv, pt, sp, a, band, f, ps);      // rejects a >= M -> bad_stream
+    const max_t ur = susp_unrank(ss, tv, pt, sp, a, band, f, ps);      //  rejects a >= M -> bad_stream
     if ( ur < 0 ) [[unlikely]]
       return ur;
     oct_reconstruct(ss, tv, band, f, dst);
@@ -191,7 +191,7 @@ quot_decode(bytes payload, const hopf_info &fi, const s2_skeleton &s2, f32 *out)
   return __walk_quot(payload, fi, s2, 0, fi.nblocks, true, out);
 }
 
-};      // namespace __hopf
+};      //  namespace __hopf
 
 constexpr usize
 __out_bytes(const hopf_info &fi) noexcept
@@ -428,7 +428,7 @@ unhopf_run(bytes in, wbytes out, hopf_scratch &sc) noexcept
   return decode_core(payload, fi, &sc.sk, &sc.pt, nullptr, nullptr, nullptr, out.ptr, reinterpret_cast<f32 *>(out.ptr));
 }
 
-};      // namespace __hopf
+};      //  namespace __hopf
 
 inline result<usize>
 unhopf(bytes in, wbytes out, hopf_scratch &sc) noexcept
@@ -566,4 +566,4 @@ unhopf(const C &in, W &out) noexcept
   return unhopf(as_bytes(in), out);
 }
 
-};      // namespace hsc
+};      //  namespace hsc

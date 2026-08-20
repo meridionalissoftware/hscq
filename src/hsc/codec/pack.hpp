@@ -16,31 +16,31 @@
 #include <micron/math/arbint.hpp>
 #include <micron/types.hpp>
 
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// exact index packing: per-node fields <-> one flat index in [0, M)
+//  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//  exact index packing: per-node fields <-> one flat index in [0, M)
 //
-// recursive cardinalities overflow machine u64 words by a massive margin: at dim 64, d = 0.1 (L7)
-// the exact M has bit_length 148 (log2 M ~= 147.7), and at the dq_min floor (L16) the dim-64 index
-// reaches 781 bits -- we use the stack allocd arbuint (microns bigint type)
+//  recursive cardinalities overflow machine u64 words by a massive margin: at dim 64, d = 0.1 (L7)
+//  the exact M has bit_length 148 (log2 M ~= 147.7), and at the dq_min floor (L16) the dim-64 index
+//  reaches 781 bits -- we use the stack allocd arbuint (microns bigint type)
 //
-// width derivation: pack_build/susp_pack_build reject at bit_length > hsc_index_bits - 64 = 960,
-// so 1024 gives 960 usable bits against a measured worst case of 781 (+64 headroom = 845 needed);
-// widening is always safe, narrowing below ~845 starts rejecting dim-64 streams at the fine end
+//  width derivation: pack_build/susp_pack_build reject at bit_length > hsc_index_bits - 64 = 960,
+//  so 1024 gives 960 usable bits against a measured worst case of 781 (+64 headroom = 845 needed);
+//  widening is always safe, narrowing below ~845 starts rejecting dim-64 streams at the fine end
 
 namespace hsc
 {
 
-// stack
+//  stack
 inline constexpr usize hsc_index_bits = 1024;
 using vq_index = micron::arbuint<hsc_index_bits>;
 
-// node_m[node id], row_off[row slot]
+//  node_m[node id], row_off[row slot]
 struct pack_tables {
   vq_index *node_m = nullptr;
   vq_index *row_off = nullptr;
 };
 
-// children live at dim_log2 - 1
+//  children live at dim_log2 - 1
 constexpr max_t
 pack_build(const tree_arena &ar, pack_tables &pt) noexcept
 {
@@ -49,7 +49,7 @@ pack_build(const tree_arena &ar, pack_tables &pt) noexcept
       const tree_node &nd = ar.nodes[id];
       if ( nd.dim_log2 != dl ) continue;
       if ( dl == 2 ) {
-        pt.node_m[id] = vq_index(nd.m_mod);      // NOTE: dim-4 cardinality fits u64
+        pt.node_m[id] = vq_index(nd.m_mod);      //  NOTE: dim-4 cardinality fits u64
         continue;
       }
       vq_index acc(0u);
@@ -74,7 +74,7 @@ pack_m(const tree_skeleton &sk, const pack_tables &pt) noexcept
   return pt.node_m[sk.root];
 }
 
-// ceil(log2 M) = bit_length(M - 1); the M == 1 degenerate code packs to a zero-width field
+//  ceil(log2 M) = bit_length(M - 1); the M == 1 degenerate code packs to a zero-width field
 constexpr u32
 shape_bits(const tree_skeleton &sk, const pack_tables &pt) noexcept
 {
@@ -83,8 +83,8 @@ shape_bits(const tree_skeleton &sk, const pack_tables &pt) noexcept
   return static_cast<u32>(m.bit_length());
 }
 
-// NOTE: micron's bounded store default-ctor is d{}, which zeroes all cap_limbs by design;
-// avoid via a scratch
+//  NOTE: micron's bounded store default-ctor is d{}, which zeroes all cap_limbs by design;
+//  avoid via a scratch
 struct pack_scratch {
   vq_index t[7];
 };
@@ -95,7 +95,7 @@ __pack_rank(const tree_skeleton &sk, const pack_tables &pt, const tree_fields &f
 {
   const tree_node &nd = sk.nodes[id];
   if ( nd.dim_log2 == 2 ) {
-    out = f.base[pb++];      // operator=(u64) wins: writes one limb, no 128-byte temporary
+    out = f.base[pb++];      //  operator=(u64) wins: writes one limb, no 128-byte temporary
     return;
   }
   const u32 x = f.leaf[pi++];
@@ -130,7 +130,7 @@ __pack_unrank(const tree_skeleton &sk, const pack_tables &pt, vq_index &a, u32 i
     f.base[pb++] = static_cast<u64>(a);
     return;
   }
-  u32 lo = 0, hi = nd.count - 1;      // last row with row_off <= a (prefix sums are monotone)
+  u32 lo = 0, hi = nd.count - 1;      //  last row with row_off <= a (prefix sums are monotone)
   while ( lo < hi ) {
     const u32 mid = (lo + hi + 1) >> 1;
     lo = pt.row_off[nd.rows_at + mid] <= a ? mid : lo;
@@ -140,12 +140,12 @@ __pack_unrank(const tree_skeleton &sk, const pack_tables &pt, vq_index &a, u32 i
   const tree_row &rw = sk.rows[nd.rows_at + lo];
   a -= pt.row_off[nd.rows_at + lo];
   vq_index &q = tmp[nd.dim_log2];
-  a.__divmod_both(pt.node_m[rw.c1], q);      // a = quot * M1 + rem: a becomes rem, q the quot
+  a.__divmod_both(pt.node_m[rw.c1], q);      //  a = quot * M1 + rem: a becomes rem, q the quot
   __pack_unrank(sk, pt, a, rw.c1, pi, pb, f, tmp);
   __pack_unrank(sk, pt, q, rw.c2, pi, pb, f, tmp);
 }
 
-// flat index -> per-node fields; rejects a >= M
+//  flat index -> per-node fields; rejects a >= M
 constexpr max_t
 pack_unrank(const tree_skeleton &sk, const pack_tables &pt, vq_index &a, tree_fields &f, pack_scratch &ps) noexcept
 {
@@ -156,7 +156,7 @@ pack_unrank(const tree_skeleton &sk, const pack_tables &pt, vq_index &a, tree_fi
   return 0;
 }
 
-// convenience
+//  convenience
 constexpr max_t
 pack_unrank(const tree_skeleton &sk, const pack_tables &pt, vq_index a, tree_fields &f) noexcept
 {
@@ -164,9 +164,9 @@ pack_unrank(const tree_skeleton &sk, const pack_tables &pt, vq_index a, tree_fie
   return pack_unrank(sk, pt, a, f, ps);
 }
 
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// suspension index accounting for arbints
-// (mode oct: S^8 over dim-8 tree children)
+//  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//  suspension index accounting for arbints
+//  (mode oct: S^8 over dim-8 tree children)
 
 struct susp_pack {
   vq_index *band_off = nullptr;
@@ -197,7 +197,7 @@ susp_m(const susp_pack &sp) noexcept
   return sp.band_off[sp.count];
 }
 
-// ceil(log2 M); the suspension is never degenerate (M >= 2 at every valid d_q)
+//  ceil(log2 M); the suspension is never degenerate (M >= 2 at every valid d_q)
 constexpr u32
 susp_bits(const susp_pack &sp) noexcept
 {
@@ -218,14 +218,14 @@ susp_rank(const susp_skeleton &ss, const tree_skeleton &tv, const pack_tables &p
   out += sp.band_off[band];
 }
 
-// flat index -> (band, child fields); rejects a >= M
+//  flat index -> (band, child fields); rejects a >= M
 constexpr max_t
 susp_unrank(const susp_skeleton &ss, const tree_skeleton &tv, const pack_tables &pt, const susp_pack &sp, vq_index &a, u32 &band,
             tree_fields &f, pack_scratch &ps) noexcept
 {
   if ( !(a < sp.band_off[sp.count]) ) [[unlikely]]
     return fail(error::bad_stream);
-  u32 lo = 0, hi = sp.count - 1;      // last band with band_off <= a (prefix sums are monotone)
+  u32 lo = 0, hi = sp.count - 1;      //  last band with band_off <= a (prefix sums are monotone)
   while ( lo < hi ) {
     const u32 mid = (lo + hi + 1) >> 1;
     lo = sp.band_off[mid] <= a ? mid : lo;
@@ -237,9 +237,9 @@ susp_unrank(const susp_skeleton &ss, const tree_skeleton &tv, const pack_tables 
   return pack_unrank(susp_child_view(ss, tv, lo), pt, a, f, ps);
 }
 
-// NOTE: the limb indexing below (pos >> 6, pos & 63) assumes 64-bit arbuint limbs -- true on every
-// target hsc supports (x86-64 Linux); a u32-limb build of micron would need this rewritten limb-
-// agnostically (get_wide below already is)
+//  NOTE: the limb indexing below (pos >> 6, pos & 63) assumes 64-bit arbuint limbs -- true on every
+//  target hsc supports (x86-64 Linux); a u32-limb build of micron would need this rewritten limb-
+//  agnostically (get_wide below already is)
 constexpr void
 put_wide(bits::bitwriter &w, const vq_index &v, u32 nbits) noexcept
 {
@@ -273,4 +273,4 @@ get_wide(bits::bitreader &r, u32 nbits, vq_index &v) noexcept
   return true;
 }
 
-};      // namespace hsc
+};      //  namespace hsc

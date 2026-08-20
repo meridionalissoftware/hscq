@@ -94,8 +94,8 @@ BreakStringLiterals: true
 ColumnLimit:     140
 CommentPragmas:  '^ IWYU pragma:'
 CompactNamespaces: true
-ConstructorInitializerIndentWidth: 4
-ContinuationIndentWidth: 4
+ConstructorInitializerIndentWidth: 3
+ContinuationIndentWidth: 3
 Cpp11BracedListStyle: false
 DerivePointerAlignment: false
 DisableFormat:   false
@@ -217,7 +217,7 @@ SpacesBeforeTrailingComments: 6
 SpacesInAngles:  Never
 SpacesInContainerLiterals: true
 SpacesInLineCommentPrefix:
-  Minimum:         1
+  Minimum:         2
   Maximum:         -1
 SpacesInParens:  Custom
 SpacesInParensOptions:

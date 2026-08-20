@@ -10,13 +10,13 @@
 
 #include <micron/types.hpp>
 
-// 64-bit batched bit output; LSB-first within each byte
+//  64-bit batched bit output; LSB-first within each byte
 namespace hsc::bits
 {
 
 struct bitwriter {
-  u64 acc = 0;      // pending bits, LSB-first; bits at/above `cnt` are zero
-  i32 cnt = 0;      // valid bit count, 0..63
+  u64 acc = 0;      //  pending bits, LSB-first; bits at/above `cnt` are zero
+  i32 cnt = 0;      //  valid bit count, 0..63
   u8 *out = nullptr;
   u8 *fast_end = nullptr;
 
@@ -61,4 +61,4 @@ struct bitwriter {
   }
 };
 
-};      // namespace hsc::bits
+};      //  namespace hsc::bits

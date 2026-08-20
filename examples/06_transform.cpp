@@ -1,10 +1,10 @@
-// 06_transform.cpp
-// See also:
-//   examples/02_tensor.cpp   — the plan, field by field
-//   examples/05_modes.cpp    — the six input modes
+//  06_transform.cpp
+//  See also:
+//    examples/02_tensor.cpp   — the plan, field by field
+//    examples/05_modes.cpp    — the six input modes
 //
-// Build (from the repo root):
-//   duck batch examples.duck && ./bin/06_transform
+//  Build (from the repo root):
+//    duck batch examples.duck && ./bin/06_transform
 
 #include "_ex_common.hpp"
 
@@ -63,14 +63,14 @@ run(const char *label, const hsc::tensor &t, hsc::hopf_scratch &sc, u32 dl, i32 
   mc::echo(bytes_off == bytes_on ? "same bytes" : "RATE CHANGED");
 }
 
-};      // namespace
+};      //  namespace
 
 int
 main()
 {
   hsc::hopf_scratch sc;
 
-  // a) the case it was built for
+  //  a) the case it was built for
   ex::head("axis-concentrated rows");
 
   mc::vector<f32> sp = spiky(k_rows, k_cols);
@@ -80,8 +80,8 @@ main()
   run("one-hot", ts, sc, 4, 5);
   run("one-hot", ts, sc, 2, 6);
 
-  // b) the case it hurts
-  // smooth, correlated rows already sit near the dense leaves; rotating them moves them off
+  //  b) the case it hurts
+  //  smooth, correlated rows already sit near the dense leaves; rotating them moves them off
   ex::head("smooth rows");
 
   mc::vector<f32> w = ex::weights(k_rows, k_cols);
@@ -93,7 +93,7 @@ main()
   mc::echo("   at another. It is the BYTE lane where it clearly hurts:");
   mc::echo("");
 
-  // bin mode on smooth bytes is the measured regression that keeps the default off
+  //  bin mode on smooth bytes is the measured regression that keeps the default off
   mc::vector<u8> sb;
   sb.reserve(65536);
   for ( usize i = 0; i < 65536; ++i ) sb.push_back(static_cast<u8>(128 + 100.0 * micron::sin(static_cast<f64>(i) * 0.003)));
@@ -124,7 +124,7 @@ main()
     mc::echo("per-byte rmse");
   }
 
-  // c) the point about rate
+  //  c) the point about rate
   ex::head("rate is unchanged");
 
   hsc::target a{};

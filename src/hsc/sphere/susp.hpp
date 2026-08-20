@@ -13,30 +13,30 @@
 #include <micron/math.hpp>
 #include <micron/types.hpp>
 
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// latitude-band suspension
-// (S^4 / S^8 base quantizers for quat and oct)
+//  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//  latitude-band suspension
+//  (S^4 / S^8 base quantizers for quat and oct)
 
 namespace hsc
 {
 
 struct susp_band {
-  f64 st = 0;           // sin(theta_b): band sphere radius (0 at the poles)
-  f64 ct = 0;           // cos(theta_b): band height (+1 north pole, -1 south pole)
-  u32 child = 0;        // tree node id of the child code (interior bands only)
-  u64 m_mod = 0;        // child cardinality % 2^64 (1 at the poles; exact for dim-4 children)
-  u64 off_mod = 0;      // cumulative codeword offset % 2^64 (exact when total M < 2^64: the quat lane)
+  f64 st = 0;           //  sin(theta_b): band sphere radius (0 at the poles)
+  f64 ct = 0;           //  cos(theta_b): band height (+1 north pole, -1 south pole)
+  u32 child = 0;        //  tree node id of the child code (interior bands only)
+  u64 m_mod = 0;        //  child cardinality % 2^64 (1 at the poles; exact for dim-4 children)
+  u64 off_mod = 0;      //  cumulative codeword offset % 2^64 (exact when total M < 2^64: the quat lane)
 };
 
 struct susp_skeleton {
   const susp_band *bd = nullptr;
-  u32 count = 0;               // T' + 2, always >= 2 (== 2 means poles only)
-  u32 child_dim_log2 = 2;      // 2: S^3 children (mode quat) | 3: S^7 children (mode oct)
+  u32 count = 0;               //  T' + 2, always >= 2 (== 2 means poles only)
+  u32 child_dim_log2 = 2;      //  2: S^3 children (mode quat) | 3: S^7 children (mode oct)
   f64 d = 0;
-  f64 dth = 0;           // 2 asin(d/2)
-  f64 th_first = 0;      // colatitude of interior band 1 (0 when count == 2)
-  f64 th_last = 0;       // colatitude of interior band T' (0 when count == 2)
-  u64 m_mod = 0;         // total cardinality % 2^64 (exact for child_dim_log2 == 2)
+  f64 dth = 0;           //  2 asin(d/2)
+  f64 th_first = 0;      //  colatitude of interior band 1 (0 when count == 2)
+  f64 th_last = 0;       //  colatitude of interior band T' (0 when count == 2)
+  u64 m_mod = 0;         //  total cardinality % 2^64 (exact for child_dim_log2 == 2)
 };
 
 constexpr u32
@@ -47,11 +47,11 @@ susp_band_count(u32 dq) noexcept
   const f64 w = k_pi - 2.0 * dth;
   if ( w < 0.0 ) return 2;
   u32 tp = static_cast<u32>(micron::math::mkbits::round_ns::floor<f64>(w / dth)) + 1;
-  if ( (tp & 1u) == 0 ) --tp;      // anchored at the equator
+  if ( (tp & 1u) == 0 ) --tp;      //  anchored at the equator
   return tp + 2;
 }
 
-// worst case over valid streams (dq_min = 1678, d = d_of(dq_min)) is 31411 entries (~1.2 MiB)
+//  worst case over valid streams (dq_min = 1678, d = d_of(dq_min)) is 31411 entries (~1.2 MiB)
 inline constexpr u32 susp_max_bands = 31413;
 
 constexpr max_t
@@ -76,7 +76,7 @@ susp_build(u32 dq, u32 child_dim_log2, tree_arena &ar, susp_band *buf, susp_skel
       return c;
     const u64 cm = ar.nodes[static_cast<u32>(c)].m_mod;
     buf[1 + b] = susp_band{ st, ct, static_cast<u32>(c), cm, m_mod };
-    m_mod += cm;      // u64 wrap by design (matches the wire's M % 2^64 guard)
+    m_mod += cm;      //  u64 wrap by design (matches the wire's M % 2^64 guard)
   }
   buf[count - 1] = susp_band{ 0.0, -1.0, 0, 1, m_mod };
   m_mod += 1;
@@ -118,7 +118,7 @@ susp_decode(const susp_skeleton &sk, const tree_skeleton &tv, u32 band, const tr
   const susp_band &bd = sk.bd[band];
   if ( band == 0 || band == sk.count - 1 ) {
     for ( u32 c = 0; c < n; ++c ) p[c] = 0.0;
-    p[n] = bd.ct;      // exact +-1
+    p[n] = bd.ct;      //  exact +-1
     return;
   }
   tree_decode(susp_child_view(sk, tv, band), f, p);
@@ -142,7 +142,7 @@ __susp_dot(const susp_skeleton &sk, const tree_skeleton &tv, u32 band, const f64
   return fu::fma(bd.st, s, bd.ct * p[n]);
 }
 
-// n+1 f64s, height last (p[n] = h), n = 1 << child_dim_log2
+//  n+1 f64s, height last (p[n] = h), n = 1 << child_dim_log2
 constexpr u32
 susp_quantize(const susp_skeleton &sk, const tree_skeleton &tv, const f64 *p, tree_fields &f, u32 refine = 0) noexcept
 {
@@ -151,15 +151,15 @@ susp_quantize(const susp_skeleton &sk, const tree_skeleton &tv, const f64 *p, tr
   const f64 th = micron::acos(hz);
   u32 band = 0;
   if ( sk.count == 2 ) {
-    band = th > k_pi * 0.5 ? 1u : 0u;      // tie at the equator -> north
+    band = th > k_pi * 0.5 ? 1u : 0u;      //  tie at the equator -> north
   } else {
     const i64 tp = static_cast<i64>(sk.count) - 2;
     i64 j = static_cast<i64>(__round((th - sk.th_first) / sk.dth));
-    j = j < 0 ? 0 : j;      // two selects, not a nested branch pair (see s3_quantize)
+    j = j < 0 ? 0 : j;      //  two selects, not a nested branch pair (see s3_quantize)
     j = j >= tp ? tp - 1 : j;
     band = 1u + static_cast<u32>(j);
-    band = th < 0.5 * sk.th_first ? 0u : band;                         // north strictly nearer than band 1
-    band = th > 0.5 * (sk.th_last + k_pi) ? sk.count - 1u : band;      // south strictly nearer than band T'
+    band = th < 0.5 * sk.th_first ? 0u : band;                         //  north strictly nearer than band 1
+    band = th > 0.5 * (sk.th_last + k_pi) ? sk.count - 1u : band;      //  south strictly nearer than band T'
   }
   if ( !refine ) {
     if ( band != 0 && band != sk.count - 1 ) tree_quantize(susp_child_view(sk, tv, band), p, f, 0);
@@ -184,4 +184,4 @@ susp_quantize(const susp_skeleton &sk, const tree_skeleton &tv, const f64 *p, tr
   return bb;
 }
 
-};      // namespace hsc
+};      //  namespace hsc

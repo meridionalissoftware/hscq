@@ -33,6 +33,9 @@ constexpr auto plain  = hsc::ct::unhopf<stream>();
 ```
 
 > [!WARNING]
+> hsc has been tested exclusively on amd64 (AVX2+) for now.
+
+> [!WARNING]
 > hsc is currently Linux only, by nature of micron being Linux only. No other kernels or operating systems are supported. BSDs *may* work, but this is not guaranteed. 
 
 ## Installation

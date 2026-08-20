@@ -1,8 +1,8 @@
-// The S^2 latitude-band quantizer behind quotient mode. Guards: golden cardinalities, full
-// index bijection sweeps, brute-force minimum pairwise distance on whole codebooks, pole
-// determinism (degenerate m=1 bands ignore longitude), and off-sphere robustness of the
-// acos clamp. The Hopf projection/lift pair that feeds this quantizer is tested in
-// quotient.cpp, not here.
+//  The S^2 latitude-band quantizer behind quotient mode. Guards: golden cardinalities, full
+//  index bijection sweeps, brute-force minimum pairwise distance on whole codebooks, pole
+//  determinism (degenerate m=1 bands ignore longitude), and off-sphere robustness of the
+//  acos clamp. The Hopf projection/lift pair that feeds this quantizer is tested in
+//  quotient.cpp, not here.
 
 #include "../src/hsc/sphere/s2.hpp"
 #include "tutil.hpp"
@@ -23,15 +23,15 @@ ct_m(u32 dq)
   return hsc::s2_build(dq, buf).m_total;
 }
 
-// golden cardinalities from the validated prototype, at the exact wire d_q values
-static_assert(ct_m(hsc::level_dq(2)) == 22);        // d = 0.7
-static_assert(ct_m(hsc::level_dq(3)) == 46);        // d = 0.5
-static_assert(ct_m(hsc::level_dq(5)) == 132);       // d = 0.3
-static_assert(ct_m(hsc::level_dq(7)) == 1236);      // d = 0.1
+//  golden cardinalities from the validated prototype, at the exact wire d_q values
+static_assert(ct_m(hsc::level_dq(2)) == 22);        //  d = 0.7
+static_assert(ct_m(hsc::level_dq(3)) == 46);        //  d = 0.5
+static_assert(ct_m(hsc::level_dq(5)) == 132);       //  d = 0.3
+static_assert(ct_m(hsc::level_dq(7)) == 1236);      //  d = 0.1
 
 static hsc::s2_band g_bd[hsc::s2_max_bands];
 
-}      // namespace
+}      //  namespace
 
 int
 main()
@@ -50,7 +50,7 @@ main()
 
   sb::test_case("brute-force minimum pairwise distance >= d on whole codebooks");
   {
-    for ( i32 lvl : { 2, 3, 5 } ) {      // M = 22 / 46 / 132
+    for ( i32 lvl : { 2, 3, 5 } ) {      //  M = 22 / 46 / 132
       const hsc::s2_skeleton sk = hsc::s2_build(hsc::level_dq(lvl), g_bd);
       const u64 M = sk.m_total;
       static f64 pts[132][3];
@@ -91,7 +91,7 @@ main()
     sb::require(an < sk.m_total);
     sb::require(as < sk.m_total);
     sb::require(an != as);
-    // a whisper off the pole in any longitude still lands on the same codeword neighborhood
+    //  a whisper off the pole in any longitude still lands on the same codeword neighborhood
     for ( i32 t = 0; t < 16; ++t ) {
       const f64 phi = static_cast<f64>(t) * hsc::k_2pi / 16.0;
       const f64 p[3] = { 1e-9 * micron::cos(phi), 1e-9 * micron::sin(phi), 1.0 };

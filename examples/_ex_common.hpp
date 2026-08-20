@@ -43,7 +43,7 @@ line3(const char *label, f64 v, const char *suffix = "")
   mc::echo(suffix);
 }
 
-// pad a label or a number out so a hand-built table lines up
+//  pad a label or a number out so a hand-built table lines up
 inline void
 pad(const char *s, usize w)
 {
@@ -62,22 +62,22 @@ padnum(u64 v, usize w)
   for ( ; n < w; ++n ) mc::echon(" ");
 }
 
-// a fixed-decimal number in a fixed-width column
+//  a fixed-decimal number in a fixed-width column
 inline void
 padf3(f64 v, usize w)
 {
   const bool neg = v < 0;
   f64 a = neg ? -v : v;
   const u64 whole = static_cast<u64>(a);
-  usize n = (neg ? 1 : 0) + 4;      // sign + ".ddd"
+  usize n = (neg ? 1 : 0) + 4;      //  sign + ".ddd"
   for ( u64 x = whole; x >= 10; x /= 10 ) ++n;
   ++n;
   put3(v);
   for ( ; n < w; ++n ) mc::echon(" ");
 }
 
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// deterministic data
+//  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//  deterministic data
 
 struct rng {
   u64 s = 0x9E3779B97F4A7C15ull;
@@ -98,7 +98,7 @@ struct rng {
   }
 };
 
-// a weight-matrix-shaped tensor: centered, correlated along a row, a handful of loud rows
+//  a weight-matrix-shaped tensor: centered, correlated along a row, a handful of loud rows
 inline mc::vector<f32>
 weights(usize rows, usize cols, u64 seed = 0x9E3779B97F4A7C15ull)
 {
@@ -117,7 +117,7 @@ weights(usize rows, usize cols, u64 seed = 0x9E3779B97F4A7C15ull)
   return w;
 }
 
-// an embedding table
+//  an embedding table
 inline mc::vector<f32>
 embeddings(usize rows, usize cols, u64 seed = 0xD1B54A32D192ED03ull)
 {
@@ -165,4 +165,4 @@ slurp_prefix(const char *path, u8 *dst, usize cap)
   return static_cast<max_t>(got);
 }
 
-};      // namespace ex
+};      //  namespace ex

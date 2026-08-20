@@ -1,10 +1,10 @@
-// The energy-balancing pre-rotation (codec/rot.hpp). Guards: the k_dsign_mask literal against
-// its xorshift64 derivation, consteval rot_fwd of a fixed ramp against pinned f64 bit patterns
-// with the runtime path held to the same pins (the identity that extends the determinism
-// contract over the transform), norm preservation and involution across dims 4..64, the point
-// of the feature -- every basis vector's recursive half-energy split is exactly 1/2 at every
-// level -- and the flat-block split staying inside the fan. Container-level behavior (flags
-// bit2, stream bytes, the spiky win) is tested in container/roundtrip/comptime.cpp, not here.
+//  The energy-balancing pre-rotation (codec/rot.hpp). Guards: the k_dsign_mask literal against
+//  its xorshift64 derivation, consteval rot_fwd of a fixed ramp against pinned f64 bit patterns
+//  with the runtime path held to the same pins (the identity that extends the determinism
+//  contract over the transform), norm preservation and involution across dims 4..64, the point
+//  of the feature -- every basis vector's recursive half-energy split is exactly 1/2 at every
+//  level -- and the flat-block split staying inside the fan. Container-level behavior (flags
+//  bit2, stream bytes, the spiky win) is tested in container/roundtrip/comptime.cpp, not here.
 
 #include "../src/hsc/codec/rot.hpp"
 #include "tutil.hpp"
@@ -16,8 +16,8 @@
 namespace
 {
 
-// the sign diagonal is one xorshift64 step from the golden-ratio constant; the LITERAL is the
-// format constant, and this derivation must never drift from it
+//  the sign diagonal is one xorshift64 step from the golden-ratio constant; the LITERAL is the
+//  format constant, and this derivation must never drift from it
 consteval u64
 dsign_step()
 {
@@ -31,8 +31,8 @@ dsign_step()
 static_assert(hsc::k_dsign_mask == dsign_step());
 static_assert(__builtin_popcountll(hsc::k_dsign_mask) == 38);
 
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// consteval rot_fwd of the dim-8 ramp {1..8}, pinned as exact bit patterns
+//  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//  consteval rot_fwd of the dim-8 ramp {1..8}, pinned as exact bit patterns
 
 struct r8 {
   f64 d[8];
@@ -63,8 +63,8 @@ ramp8_pinned()
 
 static_assert(ramp8_pinned());
 
-// worst deviation from 1/2 of the lower-half energy fraction, over every aligned even-length
-// segment -- i.e. every node of the codec's recursive halving, all the way down
+//  worst deviation from 1/2 of the lower-half energy fraction, over every aligned even-length
+//  segment -- i.e. every node of the codec's recursive halving, all the way down
 f64
 worst_split_dev(const f64 *v, u32 n)
 {
@@ -85,7 +85,7 @@ worst_split_dev(const f64 *v, u32 n)
   return worst;
 }
 
-}      // namespace
+}      //  namespace
 
 int
 main()

@@ -1,10 +1,10 @@
-// The fixed-rate contract, asserted rather than assumed. hsc's compressed size is a closed-form
-// function of (mode, dim_log2, d_q, gain_bits, n_elems) and of nothing about the data, so
-// hsc::rate()'s per-block accounting must reproduce the byte count hopf_into actually emits --
-// EXACTLY, in every cell. A mismatch here is a bug in the accounting or in the packer, never a
-// tolerance. Also pins the frozen level 1..9 d_q constants, the appended 10..16 ladder and its
-// M(4) cardinalities, the clamp at both ends, and degenerate() against the cells where the
-// recursion collapses to M == 1 (the shape field vanishes and only the gain survives).
+//  The fixed-rate contract, asserted rather than assumed. hsc's compressed size is a closed-form
+//  function of (mode, dim_log2, d_q, gain_bits, n_elems) and of nothing about the data, so
+//  hsc::rate()'s per-block accounting must reproduce the byte count hopf_into actually emits --
+//  EXACTLY, in every cell. A mismatch here is a bug in the accounting or in the packer, never a
+//  tolerance. Also pins the frozen level 1..9 d_q constants, the appended 10..16 ladder and its
+//  M(4) cardinalities, the clamp at both ends, and degenerate() against the cells where the
+//  recursion collapses to M == 1 (the shape field vanishes and only the gain survives).
 
 #include "../src/hsc/hsc.hpp"
 #include "tutil.hpp"
@@ -14,9 +14,9 @@
 
 #include <snowball/snowball.hpp>
 
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// the frozen ladder: levels 1..9 are load-bearing for every golden in tests/ and every number in
-// CLAUDE.md's perf reference. If one of these moves, the whole published record is invalidated.
+//  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//  the frozen ladder: levels 1..9 are load-bearing for every golden in tests/ and every number in
+//  CLAUDE.md's perf reference. If one of these moves, the whole published record is invalidated.
 
 static_assert(hsc::level_dq(1) == 15099494);
 static_assert(hsc::level_dq(2) == 11744051);
@@ -28,7 +28,7 @@ static_assert(hsc::level_dq(7) == 1677722);
 static_assert(hsc::level_dq(8) == 838861);
 static_assert(hsc::level_dq(9) == 335544);
 
-// the appended fine end, and that it lands exactly on the API floor with no gap
+//  the appended fine end, and that it lands exactly on the API floor with no gap
 static_assert(hsc::level_dq(10) == 167772);
 static_assert(hsc::level_dq(11) == 83886);
 static_assert(hsc::level_dq(12) == 33554);
@@ -39,58 +39,58 @@ static_assert(hsc::level_dq(16) == 1678);
 static_assert(hsc::level_dq(16) == hsc::dq_min);
 static_assert(hsc::dq_of(1e-4) == hsc::dq_min);
 
-// clamp at both ends
+//  clamp at both ends
 static_assert(hsc::level_dq(0) == hsc::level_dq(1));
 static_assert(hsc::level_dq(-7) == hsc::level_dq(1));
 static_assert(hsc::level_dq(17) == hsc::level_dq(16));
 static_assert(hsc::level_dq(9999) == hsc::level_dq(16));
 
-// strictly decreasing d_q: the ladder is monotone in quality, which the quality search relies on
+//  strictly decreasing d_q: the ladder is monotone in quality, which the quality search relies on
 static_assert(hsc::level_dq(1) > hsc::level_dq(2) && hsc::level_dq(9) > hsc::level_dq(10));
 static_assert(hsc::level_dq(15) > hsc::level_dq(16));
 
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// comptime cardinality goldens for the new levels (4D base case; mirrors tests/s3.cpp's style)
+//  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//  comptime cardinality goldens for the new levels (4D base case; mirrors tests/s3.cpp's style)
 
 static_assert(hsc::ct::s3_m<hsc::level_dq(10)>() == 22704306);
 static_assert(hsc::ct::s3_m<hsc::level_dq(11)>() == 181975364);
 static_assert(hsc::ct::s3_m<hsc::level_dq(12)>() == 2847067414);
 static_assert(hsc::ct::s3_m<hsc::level_dq(13)>() == 22785126711ull);
 
-// the new consteval rate probes, against tests/pack.cpp's shape_bits goldens
+//  the new consteval rate probes, against tests/pack.cpp's shape_bits goldens
 static_assert(hsc::ct::shape_bits<3, hsc::level_dq(3)>() == 12);
 static_assert(hsc::ct::shape_bits<3, hsc::level_dq(5)>() == 17);
 static_assert(hsc::ct::shape_bits<3, hsc::level_dq(6)>() == 22);
 static_assert(hsc::ct::shape_bits<4, hsc::level_dq(3)>() == 16);
 static_assert(hsc::ct::shape_bits<4, hsc::level_dq(6)>() == 37);
-static_assert(hsc::ct::rate_bits<3, hsc::level_dq(6), 8>() == 30);      // dim8 L6 = 3.75 bits/byte
-static_assert(hsc::ct::s2_bits<hsc::level_dq(3)>() == 6);               // M_S2 = 46
-static_assert(hsc::ct::s2_bits<hsc::level_dq(7)>() == 11);              // M_S2 = 1236
-static_assert(hsc::ct::s4_bits<hsc::level_dq(3)>() == 9);               // M_S4 = 332
-static_assert(hsc::ct::s4_bits<hsc::level_dq(6)>() == 15);              // M_S4 = 16720 (vs unit d8: 22 -> 7 bits/block saved)
-static_assert(hsc::ct::s8_bits<hsc::level_dq(3)>() == 13);              // M_S8 = 4552
-static_assert(hsc::ct::s8_bits<hsc::level_dq(6)>() == 24);              // M_S8 = 10923842 (vs unit d16: 37 -> 13 bits/block saved)
+static_assert(hsc::ct::rate_bits<3, hsc::level_dq(6), 8>() == 30);      //  dim8 L6 = 3.75 bits/byte
+static_assert(hsc::ct::s2_bits<hsc::level_dq(3)>() == 6);               //  M_S2 = 46
+static_assert(hsc::ct::s2_bits<hsc::level_dq(7)>() == 11);              //  M_S2 = 1236
+static_assert(hsc::ct::s4_bits<hsc::level_dq(3)>() == 9);               //  M_S4 = 332
+static_assert(hsc::ct::s4_bits<hsc::level_dq(6)>() == 15);              //  M_S4 = 16720 (vs unit d8: 22 -> 7 bits/block saved)
+static_assert(hsc::ct::s8_bits<hsc::level_dq(3)>() == 13);              //  M_S8 = 4552
+static_assert(hsc::ct::s8_bits<hsc::level_dq(6)>() == 24);              //  M_S8 = 10923842 (vs unit d16: 37 -> 13 bits/block saved)
 
-// the bit-exact bin cell (hsc::opts_exact_bytes): dim4 L13 = shape 35 + gain 8 = 43 bits per 4 bytes
-// = 10.75 bits/byte, ratio 0.744x. These two are what makes that an API number rather than a claim.
+//  the bit-exact bin cell (hsc::opts_exact_bytes): dim4 L13 = shape 35 + gain 8 = 43 bits per 4 bytes
+//  = 10.75 bits/byte, ratio 0.744x. These two are what makes that an API number rather than a claim.
 static_assert(hsc::ct::shape_bits<2, hsc::level_dq(13)>() == 35);
 static_assert(hsc::ct::rate_bits<2, hsc::level_dq(13), 8>() == 43);
 
-// exact_bytes() is a cell predicate, so pin it in both directions -- what it must accept and, more
-// importantly, everything it must refuse. 0 from bin_exact_level reads "never measured", not "no".
+//  exact_bytes() is a cell predicate, so pin it in both directions -- what it must accept and, more
+//  importantly, everything it must refuse. 0 from bin_exact_level reads "never measured", not "no".
 static_assert(hsc::bin_exact_level(2) == 13);
 static_assert(hsc::bin_exact_level(3) == 0);
 static_assert(hsc::exact_bytes(hsc::opts_exact_bytes));
-static_assert(hsc::exact_bytes({ .level = 14, .dim_log2 = 2 }));                            // finer still
-static_assert(hsc::exact_bytes({ .level = 16, .dim_log2 = 2 }));                            // the floor
-static_assert(hsc::exact_bytes({ .d = 5e-4, .dim_log2 = 2 }));                              // d, not level
-static_assert(!hsc::exact_bytes({ .level = 12, .dim_log2 = 2 }));                           // coarser: ~5 bytes / 512 KiB
-static_assert(!hsc::exact_bytes({ .level = 13, .dim_log2 = 3 }));                           // dim8 unmeasured
-static_assert(!hsc::exact_bytes({ .m = hsc::mode::vec, .level = 13, .dim_log2 = 2 }));      // no integers to snap to
-static_assert(!hsc::exact_bytes({ .level = 13, .dim_log2 = 2, .gain_bits = 4 }));           // coarser gain field
-static_assert(!hsc::exact_bytes({ .level = 13, .dim_log2 = 2, .transform = true }));        // measured with bit2 off
+static_assert(hsc::exact_bytes({ .level = 14, .dim_log2 = 2 }));                            //  finer still
+static_assert(hsc::exact_bytes({ .level = 16, .dim_log2 = 2 }));                            //  the floor
+static_assert(hsc::exact_bytes({ .d = 5e-4, .dim_log2 = 2 }));                              //  d, not level
+static_assert(!hsc::exact_bytes({ .level = 12, .dim_log2 = 2 }));                           //  coarser: ~5 bytes / 512 KiB
+static_assert(!hsc::exact_bytes({ .level = 13, .dim_log2 = 3 }));                           //  dim8 unmeasured
+static_assert(!hsc::exact_bytes({ .m = hsc::mode::vec, .level = 13, .dim_log2 = 2 }));      //  no integers to snap to
+static_assert(!hsc::exact_bytes({ .level = 13, .dim_log2 = 2, .gain_bits = 4 }));           //  coarser gain field
+static_assert(!hsc::exact_bytes({ .level = 13, .dim_log2 = 2, .transform = true }));        //  measured with bit2 off
 
-// the degenerate corner, proven at compile time: at dim >= 16 level 1 has no shape field at all
+//  the degenerate corner, proven at compile time: at dim >= 16 level 1 has no shape field at all
 static_assert(hsc::ct::shape_bits<2, hsc::level_dq(1)>() == 4);
 static_assert(hsc::ct::shape_bits<3, hsc::level_dq(1)>() == 6);
 static_assert(hsc::ct::shape_bits<4, hsc::level_dq(1)>() == 0);
@@ -98,8 +98,8 @@ static_assert(hsc::ct::shape_bits<4, hsc::level_dq(1)>() == 0);
 namespace
 {
 
-// the closed form from rate.hpp's header comment, written out independently of rate_info so the
-// two derivations have to agree rather than share a bug
+//  the closed form from rate.hpp's header comment, written out independently of rate_info so the
+//  two derivations have to agree rather than share a bug
 usize
 predicted_stream(const hsc::rate_info &ri, usize n_elems) noexcept
 {
@@ -108,7 +108,7 @@ predicted_stream(const hsc::rate_info &ri, usize n_elems) noexcept
   return hsc::k_header_size + static_cast<usize>((bits + 7) / 8) + hsc::k_trailer_size;
 }
 
-}      // namespace
+}      //  namespace
 
 int
 main()
@@ -120,7 +120,7 @@ main()
   {
     micron::vector<u8> src;
     src.reserve(4099);
-    for ( usize i = 0; i < 4093; ++i ) src.push_back(static_cast<u8>(g.next()));      // ragged tail on purpose
+    for ( usize i = 0; i < 4093; ++i ) src.push_back(static_cast<u8>(g.next()));      //  ragged tail on purpose
     micron::vector<u8> z;
     z.reserve(1 << 16);
     z.resize(1 << 16);
@@ -136,8 +136,8 @@ main()
           const usize got = hsc::hopf_into(hsc::bytes{ src.begin(), src.size() }, o, z.begin(), z.size(), sc);
           sb::require_greater(got, 0ull);
           sb::require(got, predicted_stream(ri, src.size()));
-          sb::require(got, hsc::bound(src.size(), o, sc));              // the scratch bound is the same claim
-          sb::require_greater(hsc::bound(src.size(), o) + 1, got);      // scratch-free envelope >= actual
+          sb::require(got, hsc::bound(src.size(), o, sc));              //  the scratch bound is the same claim
+          sb::require_greater(hsc::bound(src.size(), o) + 1, got);      //  scratch-free envelope >= actual
         }
       }
     }
@@ -179,7 +179,7 @@ main()
           auto r = hsc::rate(o, sc);
           sb::require(r.is_first());
           const hsc::rate_info ri = r.cast<hsc::rate_info>();
-          sb::require(ri.gain_bits, m == hsc::mode::vec ? 8u : 0u);      // unit drops the gain field
+          sb::require(ri.gain_bits, m == hsc::mode::vec ? 8u : 0u);      //  unit drops the gain field
           const max_t got = hsc::hopf_into(hsc::floats{ src.begin(), nf }, o, z.begin(), z.size(), sc);
           sb::require_greater(got, static_cast<max_t>(0));
           sb::require(static_cast<usize>(got), predicted_stream(ri, nf));
@@ -195,7 +195,7 @@ main()
       sb::require_greater(gq, static_cast<max_t>(0));
       sb::require(static_cast<usize>(gq), predicted_stream(riq, nf));
       for ( hsc::mode fm : { hsc::mode::quat, hsc::mode::oct } ) {
-        // L14 oct wants a multi-million-row scratch attempt; the identity is pinned through L12
+        //  L14 oct wants a multi-million-row scratch attempt; the identity is pinned through L12
         if ( fm == hsc::mode::oct && lvl > 12 ) continue;
         const hsc::hopf_opts of{ .m = fm, .level = lvl };
         auto rf = hsc::rate(of, sc);
@@ -206,8 +206,8 @@ main()
         const max_t gf = hsc::hopf_into(hsc::floats{ src.begin(), nf }, of, z.begin(), z.size(), sc);
         sb::require_greater(gf, static_cast<max_t>(0));
         sb::require(static_cast<usize>(gf), predicted_stream(rif, nf));
-        sb::require(static_cast<usize>(gf), hsc::bound(nf, of, sc));              // the scratch bound is the same claim
-        sb::require_greater(hsc::bound(nf, of) + 1, static_cast<usize>(gf));      // scratch-free envelope >= actual
+        sb::require(static_cast<usize>(gf), hsc::bound(nf, of, sc));              //  the scratch bound is the same claim
+        sb::require_greater(hsc::bound(nf, of) + 1, static_cast<usize>(gf));      //  scratch-free envelope >= actual
       }
     }
   }
@@ -240,12 +240,12 @@ main()
       sb::require(ru16.is_first() && ro.is_first());
       sb::require_greater(ru16.cast<hsc::rate_info>().record_bits, ro.cast<hsc::rate_info>().record_bits);
     }
-    // the measured savings at L6: quat 22 - 15 = 7 bits/block, oct 37 - 24 = 13 bits/block
+    //  the measured savings at L6: quat 22 - 15 = 7 bits/block, oct 37 - 24 = 13 bits/block
     auto q6 = hsc::rate(hsc::hopf_opts{ .m = hsc::mode::quat, .level = 6 }, sc);
     auto o6 = hsc::rate(hsc::hopf_opts{ .m = hsc::mode::oct, .level = 6 }, sc);
     sb::require(q6.cast<hsc::rate_info>().shape_bits, 15u);
     sb::require(o6.cast<hsc::rate_info>().shape_bits, 24u);
-    // and the family can never go degenerate: even the d = 2 floor keeps the two pole codewords
+    //  and the family can never go degenerate: even the d = 2 floor keeps the two pole codewords
     auto qd = hsc::rate(hsc::hopf_opts{ .m = hsc::mode::quat, .d = 2.0 }, sc);
     auto od = hsc::rate(hsc::hopf_opts{ .m = hsc::mode::oct, .d = 2.0 }, sc);
     sb::require(qd.cast<hsc::rate_info>().shape_bits, 1u);
@@ -269,7 +269,7 @@ main()
         const f64 want = static_cast<f64>(src.size()) / static_cast<f64>(got);
         const f64 have = hsc::ratio_of(src.size(), o, sc);
         sb::require(have > want - 1e-12 && have < want + 1e-12);
-        // the container-free asymptote is the ceiling the 48-byte frame keeps you under
+        //  the container-free asymptote is the ceiling the 48-byte frame keeps you under
         sb::require_greater(hsc::rate(o, sc).cast<hsc::rate_info>().ratio + 1e-12, have);
       }
     }
@@ -277,16 +277,16 @@ main()
 
   sb::test_case("rate: degenerate() flags exactly the cells whose shape field vanished");
   {
-    // level 1 (d = 0.9) already collapses at dim >= 16; the whole coarse region below it does too
+    //  level 1 (d = 0.9) already collapses at dim >= 16; the whole coarse region below it does too
     sb::require_false(hsc::degenerate(hsc::hopf_opts{ .level = 1, .dim_log2 = 2 }, sc));
     sb::require_false(hsc::degenerate(hsc::hopf_opts{ .level = 1, .dim_log2 = 3 }, sc));
     sb::require_true(hsc::degenerate(hsc::hopf_opts{ .level = 1, .dim_log2 = 4 }, sc));
     sb::require_true(hsc::degenerate(hsc::hopf_opts{ .level = 1, .dim_log2 = 5 }, sc));
     sb::require_true(hsc::degenerate(hsc::hopf_opts{ .level = 1, .dim_log2 = 6 }, sc));
-    // an explicit d coarser than any preset: gain-only at every dim above the 4D base
+    //  an explicit d coarser than any preset: gain-only at every dim above the 4D base
     sb::require_true(hsc::degenerate(hsc::hopf_opts{ .d = 1.5, .dim_log2 = 3 }, sc));
     sb::require_true(hsc::degenerate(hsc::hopf_opts{ .d = 1.5, .dim_log2 = 6 }, sc));
-    // and nothing in the useful region is flagged
+    //  and nothing in the useful region is flagged
     for ( u32 dl : { 2u, 3u, 4u, 5u, 6u } )
       for ( i32 lvl : { 2, 3, 6, 9 } ) sb::require_false(hsc::degenerate(hsc::hopf_opts{ .level = lvl, .dim_log2 = dl }, sc));
   }
@@ -303,7 +303,7 @@ main()
     auto ri = hsc::rate(o, sc);
     sb::require(ri.is_first());
     sb::require(ri.cast<hsc::rate_info>().shape_bits, 0u);
-    sb::require(ri.cast<hsc::rate_info>().record_bits, 8u);      // gain only
+    sb::require(ri.cast<hsc::rate_info>().record_bits, 8u);      //  gain only
     const usize got = hsc::hopf_into(hsc::bytes{ src.begin(), src.size() }, o, z.begin(), z.size(), sc);
     sb::require(got, predicted_stream(ri.cast<hsc::rate_info>(), src.size()));
     auto back = hsc::unhopf(hsc::bytes{ z.begin(), got }, sc);
@@ -335,20 +335,20 @@ main()
         se += e * e;
       }
       const f64 rmse = __builtin_sqrt(se / static_cast<f64>(src.size()));
-      sb::require(rmse <= prev + 1e-9);      // a finer level never gets worse
+      sb::require(rmse <= prev + 1e-9);      //  a finer level never gets worse
       prev = rmse;
     }
   }
 
   sb::test_case("rate: hsc::opts_exact_bytes round-trips FULL-RANGE bytes bit-exactly");
   {
-    // the case above walks the ladder on a 3-bit dynamic range, which is the easy direction. This is
-    // the claim BENCHMARKS.md's psnr 99.99 column actually makes: at dim 4 / L13 mode::bin is exact
-    // on arbitrary bytes, because the per-element error lands under half a count and the integers
-    // round back to themselves. Not a tolerance -- every byte, or the test fails.
+    //  the case above walks the ladder on a 3-bit dynamic range, which is the easy direction. This is
+    //  the claim BENCHMARKS.md's psnr 99.99 column actually makes: at dim 4 / L13 mode::bin is exact
+    //  on arbitrary bytes, because the per-element error lands under half a count and the integers
+    //  round back to themselves. Not a tolerance -- every byte, or the test fails.
     micron::vector<u8> src;
     src.reserve(4096);
-    for ( usize i = 0; i < 4093; ++i ) src.push_back(static_cast<u8>(g.next()));      // ragged on purpose
+    for ( usize i = 0; i < 4093; ++i ) src.push_back(static_cast<u8>(g.next()));      //  ragged on purpose
     micron::vector<u8> z;
     z.reserve(1 << 15);
     z.resize(1 << 15);
@@ -362,11 +362,11 @@ main()
     sb::require(ri.is_first());
     sb::require(ri.cast<hsc::rate_info>().shape_bits, 35u);
     sb::require(ri.cast<hsc::rate_info>().record_bits, 43u);
-    sb::require(ri.cast<hsc::rate_info>().bits_per_input_byte, 10.75);      // EXPANSION, 0.744x
+    sb::require(ri.cast<hsc::rate_info>().bits_per_input_byte, 10.75);      //  EXPANSION, 0.744x
 
     const usize got = hsc::hopf_into(hsc::bytes{ src.begin(), src.size() }, o, z.begin(), z.size(), sc);
     sb::require(got, predicted_stream(ri.cast<hsc::rate_info>(), src.size()));
-    sb::require_greater(got, src.size());      // exactness costs rate: the stream is BIGGER
+    sb::require_greater(got, src.size());      //  exactness costs rate: the stream is BIGGER
     auto r = hsc::unhopf(hsc::bytes{ z.begin(), got }, hsc::wbytes{ out.begin(), out.size() }, sc);
     sb::require(r.is_first());
     sb::require(r.cast<usize>(), src.size());

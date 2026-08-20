@@ -15,8 +15,8 @@
 #include <micron/types.hpp>
 #include <micron/vector/vector.hpp>
 
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// reusable scratch cache
+//  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//  reusable scratch cache
 
 namespace hsc
 {
@@ -29,16 +29,16 @@ struct hopf_scratch {
   micron::vector<vq_index> row_off;
   micron::vector<s2_band> bands;
   micron::vector<susp_band> sbands;
-  micron::vector<vq_index> band_off;      // suspension prefix table, oct only
+  micron::vector<vq_index> band_off;      //  suspension prefix table, oct only
   tree_skeleton sk{};
   pack_tables pt{};
   s2_skeleton s2{};
   susp_skeleton ss{};
   susp_pack sp{};
-  u32 built_kind = 0;      // 0 = plain tree | 1 = S^4 suspension | 2 = S^8 suspension
-  u32 built_dim = 0;       // dim_log2 of the cached tree; 0 = none
+  u32 built_kind = 0;      //  0 = plain tree | 1 = S^4 suspension | 2 = S^8 suspension
+  u32 built_dim = 0;       //  dim_log2 of the cached tree; 0 = none
   u32 built_dq = 0;
-  u32 built_s2_dq = 0;      // d_q of the cached S^2 skeleton; 0 = none
+  u32 built_s2_dq = 0;      //  d_q of the cached S^2 skeleton; 0 = none
 
   ~hopf_scratch() = default;
 
@@ -94,7 +94,7 @@ struct hopf_scratch {
       tree_arena ar{ nodes.data(), static_cast<u32>(nc), 0, rows.data(), static_cast<u32>(rc), 0, leaves.data(), static_cast<u32>(lc), 0 };
       const max_t r = susp_build(dq, child_dim_log2, ar, sbands.data(), ss);
       if ( r >= 0 ) {
-        sk = tree_view(ar, 0, child_dim_log2, dq);      // arena view; a suspension has no single root
+        sk = tree_view(ar, 0, child_dim_log2, dq);      //  arena view; a suspension has no single root
         if ( kind == 2 ) {
           node_m.resize(ar.node_count);
           row_off.resize(ar.row_count ? ar.row_count : 1);
@@ -131,4 +131,4 @@ struct hopf_scratch {
   }
 };
 
-};      // namespace hsc
+};      //  namespace hsc

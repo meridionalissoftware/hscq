@@ -29,9 +29,9 @@ inline f32 g_gauss[k_n / 4];
 inline f32 g_unit[k_n / 4];
 inline u8 g_spiky[k_n];
 inline f32 g_onehot[k_n / 4];
-inline f32 g_unit16[k_n / 4];       // 16-wide unit blocks: unit-d16 input, and oct's WRONG-lane demo
-inline f32 g_fiber8[k_n / 4];       // quaternion pairs with a genuinely random S^3 fiber: quat's home turf
-inline f32 g_fiber16[k_n / 4];      // octonion pairs with a random S^7 fiber element: oct's home turf
+inline f32 g_unit16[k_n / 4];       //  16-wide unit blocks: unit-d16 input, and oct's WRONG-lane demo
+inline f32 g_fiber8[k_n / 4];       //  quaternion pairs with a genuinely random S^3 fiber: quat's home turf
+inline f32 g_fiber16[k_n / 4];      //  octonion pairs with a random S^7 fiber element: oct's home turf
 
 inline u64 g_seed = 0x9E3779B97F4A7C15ull;
 
@@ -96,8 +96,8 @@ generate()
     const f64 nn = __builtin_sqrt(s);
     for ( i32 c = 0; c < 16; ++c ) g_unit16[b * 16 + c] = static_cast<f32>(v[c] / nn);
   }
-  // fiber-symmetric pairs: a random BASE point lifted through a random FIBER element via the
-  // exact graph-sphere parametrization (y = s u, x = (v u)/(2s)) -- the data quat/oct exist for
+  //  fiber-symmetric pairs: a random BASE point lifted through a random FIBER element via the
+  //  exact graph-sphere parametrization (y = s u, x = (v u)/(2s)) -- the data quat/oct exist for
   const auto sphere_pt = [&](u32 n, f64 *p) {
     f64 s = 0;
     for ( u32 c = 0; c <= n; ++c ) {
@@ -110,7 +110,7 @@ generate()
   for ( usize b = 0; b < k_n / 32; ++b ) {
     f64 p[5], u[4];
     sphere_pt(4, p);
-    sphere_pt(3, u);      // 4 components used as a unit quaternion
+    sphere_pt(3, u);      //  4 components used as a unit quaternion
     const f64 sq = __builtin_sqrt((1.0 - p[4]) * 0.5);
     const f64 cq = __builtin_sqrt((1.0 + p[4]) * 0.5);
     f64 x[4], y[4];
@@ -133,7 +133,7 @@ generate()
   for ( usize b = 0; b < k_n / 64; ++b ) {
     f64 p[9], u[8];
     sphere_pt(8, p);
-    sphere_pt(7, u);      // 8 components used as a unit octonion
+    sphere_pt(7, u);      //  8 components used as a unit octonion
     const f64 sq = __builtin_sqrt((1.0 - p[8]) * 0.5);
     const f64 cq = __builtin_sqrt((1.0 + p[8]) * 0.5);
     f64 x[8], y[8];
@@ -163,4 +163,4 @@ inline const corpus corpora[] = {
 };
 inline constexpr usize corpora_count = 4;
 
-};      // namespace hc
+};      //  namespace hc
