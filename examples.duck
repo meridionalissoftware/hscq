@@ -1,0 +1,17 @@
+# hsc examples
+#   duck batch examples.duck            serial
+#   duck batch parallel examples.duck   concurrent
+# each example is a standalone micron-only tu; run them from the repo root as ./bin/01_quickstart
+#
+# NOTE the explicit -O3, as in test.duck: duck's default is -Ofast, which implies -ffast-math, and
+# hsc's codec path is floating point
+# prefer building freestanding for the github release in case people don't have glibc or other install shenanigans
+build examples/01_quickstart.cpp -O3 -i include/micron -i include/micron/src -i /usr/include -ke --start include/micron/start
+build examples/02_tensor.cpp -O3 -i include/micron -i include/micron/src -i /usr/include -ke --start include/micron/start
+build examples/03_budget.cpp -O3 -i include/micron -i include/micron/src -i /usr/include -ke --start include/micron/start
+build examples/04_embeddings.cpp -O3 -i include/micron -i include/micron/src -i /usr/include -ke --start include/micron/start
+build examples/05_modes.cpp -O3 -i include/micron -i include/micron/src -i /usr/include -ke --start include/micron/start
+build examples/06_transform.cpp -O3 -i include/micron -i include/micron/src -i /usr/include -ke --start include/micron/start
+build examples/07_comptime.cpp -O3 -i include/micron -i include/micron/src -i /usr/include -ke --start include/micron/start
+build examples/08_model_file.cpp -O3 -i include/micron -i include/micron/src -i /usr/include -ke --start include/micron/start
+build examples/09_pose.cpp -O3 -i include/micron -i include/micron/src -i /usr/include -ke --start include/micron/start

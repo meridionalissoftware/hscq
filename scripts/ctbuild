@@ -1,0 +1,17 @@
+#!/bin/sh
+# Build the compile-time stress test with raised constexpr evaluation limits — duck exposes
+# no passthrough for -fconstexpr-* flags, so this drives g++ directly (vendored include/micron
+# tiers, same order as test.duck; run `cd include/ && sh fetch_micron.sh` first if missing).
+# Compile success == the comptime round-trips are proven; the produced binary is a no-op.
+# -O2, never -Ofast: the codec path is floating point.
+set -e
+cd "$(dirname "$0")/.."
+src="${1:-tests/comptime_stress.cpp}"
+base=$(basename "$src" | sed 's/\.[^.]*$//')
+mkdir -p bin
+/usr/bin/g++ -std=c++26 -O2 -march=native -fext-numeric-literals \
+  -fconstexpr-ops-limit=2000000000 -fconstexpr-loop-limit=200000000 -fconstexpr-depth=1024 \
+  -DHSC_CT_STRESS \
+  -Iinclude/micron/tests -Iinclude/micron -Iinclude/micron/src \
+  "$src" -lpthread -o "bin/$base"
+echo "ctbuild: $src -> bin/$base (comptime static_asserts proven)"

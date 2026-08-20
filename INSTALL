@@ -1,0 +1,24 @@
+hsc is header-only and depends only on micron.
+
+To build anything in-tree (tests, benches, examples), first fetch the vendored micron copy — every shipped build file (test.duck/build.duck/examples.duck and the *.sh variants) resolves micron at include/micron and compiles its start/ runtime from there, so this step is required:
+
+    cd include/ && sh fetch_micron.sh && cd ..
+
+To use hsc from your own project, add the include tiers to your duck line:
+
+    duck build your.cpp -i path/to/hsc/src -i path/to/hsc/include/micron -i path/to/hsc/include/micron/src
+
+so that <hsc/hsc.hpp> and <micron/...> resolve (a system-wide micron install under
+/usr/include works for this too).
+
+To install hsc system-wide (copies src/hsc to /usr/include/hsc):
+
+    python3 scripts/install_local.py
+
+Tests:    duck batch test.duck
+Benches:  duck batch build.duck && ./bin/hopf_bench
+Examples: duck batch examples.duck && ./bin/01_quickstart
+Comptime: scripts/ctbuild        (also uses include/micron)
+
+Never build with -Ofast: the codec path is floating point and hsc's stream determinism
+depends on value-safe FP
